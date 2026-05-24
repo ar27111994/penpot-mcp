@@ -1,5 +1,7 @@
 # penpot-mcp skill
 
+[![skills.sh](https://skills.sh/b/ar27111994/penpot-mcp)](https://skills.sh/ar27111994/penpot-mcp)
+
 > AI-agent skill for creating, auditing, and maintaining production-grade design projects and design systems in [Penpot](https://penpot.app) via the official [Penpot MCP Server](https://help.penpot.app/mcp/).
 
 ## What this skill covers
@@ -42,7 +44,7 @@ penpot-mcp/
 
 ## Status vs. other Penpot skills
 
-This skill was built directly from the [official Penpot MCP documentation](https://help.penpot.app/mcp/) and cross-referenced against the [`github/awesome-copilot` - penpot-uiux-design skill](https://github.com/github/awesome-copilot/tree/main/skills/penpot-uiux-design).
+This skill was built directly from the [official Penpot MCP documentation](https://help.penpot.app/mcp/) and cross-referenced against the [`github/awesome-copilot` penpot-uiux-design skill](https://github.com/github/awesome-copilot/tree/main/skills/penpot-uiux-design).
 
 Key differences:
 - ✅ Covers **Remote MCP** (the now-recommended hosted path) — the awesome-copilot skill predates this
