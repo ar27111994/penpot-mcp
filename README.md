@@ -42,7 +42,7 @@ penpot-mcp/
 
 ## Status vs. other Penpot skills
 
-This skill was built directly from the [official Penpot MCP documentation](https://help.penpot.app/mcp/) and cross-referenced against the [`github/awesome-copilot` penpot-uiux-design skill](https://github.com/github/awesome-copilot/tree/main/skills/penpot-uiux-design).
+This skill was built directly from the [official Penpot MCP documentation](https://help.penpot.app/mcp/) and cross-referenced against the [`github/awesome-copilot` - penpot-uiux-design skill](https://github.com/github/awesome-copilot/tree/main/skills/penpot-uiux-design).
 
 Key differences:
 - ✅ Covers **Remote MCP** (the now-recommended hosted path) — the awesome-copilot skill predates this
