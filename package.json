@@ -1,0 +1,23 @@
+{
+  "name": "penpot-mcp",
+  "version": "1.0.0",
+  "description": "AI-agent skill for creating and maintaining production-grade Penpot design projects and design systems via the official Penpot MCP Server.",
+  "author": "ar27111994",
+  "license": "MIT",
+  "keywords": [
+    "penpot",
+    "mcp",
+    "design-system",
+    "ui-design",
+    "agent-skill",
+    "claude-code",
+    "design-tokens",
+    "figma-alternative",
+    "design-to-code",
+    "accessibility"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ar27111994/penpot-mcp"
+  }
+}
