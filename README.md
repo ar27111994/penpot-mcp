@@ -1,6 +1,8 @@
 # penpot-mcp skill
 
-[![skills.sh](https://skills.sh/b/ar27111994/penpot-mcp)](https://skills.sh/ar27111994/penpot-mcp)
+[![GitHub Stars](https://img.shields.io/github/stars/ar27111994/penpot-mcp?style=flat&logo=github)](https://github.com/ar27111994/penpot-mcp/stargazers)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Agent Skills](https://img.shields.io/badge/agent--skills-compatible-8B5CF6?logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCI+PHBhdGggZmlsbD0id2hpdGUiIGQ9Ik0xMiAyQzYuNDggMiAyIDYuNDggMiAxMnM0LjQ4IDEwIDEwIDEwIDEwLTQuNDggMTAtMTBTMTcuNTIgMiAxMiAyek0xMSAxN0g5VjdoMnYxMHptNCAwaC0yVjdoMnYxMHoiLz48L3N2Zz4=)](https://agentskills.io)
 
 > AI-agent skill for creating, auditing, and maintaining production-grade design projects and design systems in [Penpot](https://penpot.app) via the official [Penpot MCP Server](https://help.penpot.app/mcp/).
 
