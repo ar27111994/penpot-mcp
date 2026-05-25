@@ -3,6 +3,7 @@
 [![GitHub Stars](https://img.shields.io/github/stars/ar27111994/penpot-mcp?style=flat&logo=github)](https://github.com/ar27111994/penpot-mcp/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Agent Skills](https://img.shields.io/badge/npx_skills_add-ar27111994%2Fpenpot--mcp-8B5CF6)](https://github.com/ar27111994/penpot-mcp)
+[![skills.sh](https://skills.sh/b/ar27111994/penpot-mcp)](https://skills.sh/ar27111994/penpot-mcp)
 
 > AI-agent skill for creating, auditing, and maintaining production-grade design projects and design systems — including flows, interactions, animations, and overlays — in [Penpot](https://penpot.app) via the official [Penpot MCP Server](https://help.penpot.app/mcp/).
 
