@@ -1,7 +1,7 @@
 {
   "name": "penpot-mcp",
-  "version": "1.1.0",
-  "description": "AI-agent skill for creating, auditing, and maintaining production-grade Penpot design projects, design systems, flows, interactions, and animations via the official Penpot MCP Server.",
+  "version": "1.2.0",
+  "description": "AI-agent skill for creating, auditing, and maintaining production-grade Penpot design projects, design systems, flows, interactions, animations, tokens, and visual effects via the official Penpot MCP Server.",
   "author": "ar27111994",
   "license": "MIT",
   "keywords": [
@@ -22,17 +22,11 @@
     "interactions",
     "animations",
     "flows",
+    "glassmorphism",
     "open-source-design"
   ],
-  "engines": {
-    "node": ">=20"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/ar27111994/penpot-mcp"
-  },
+  "engines": { "node": ">=20" },
+  "repository": { "type": "git", "url": "https://github.com/ar27111994/penpot-mcp" },
   "homepage": "https://github.com/ar27111994/penpot-mcp#readme",
-  "bugs": {
-    "url": "https://github.com/ar27111994/penpot-mcp/issues"
-  }
+  "bugs": { "url": "https://github.com/ar27111994/penpot-mcp/issues" }
 }
