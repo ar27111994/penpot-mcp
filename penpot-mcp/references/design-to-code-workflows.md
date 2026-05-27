@@ -1,6 +1,7 @@
 # Design-to-Code Workflows
 
 ## Table of Contents
+
 1. [Page/Screen to HTML+CSS](#1-pagescreen-to-htmlcss)
 2. [Design to React Component](#2-design-to-react-component)
 3. [Token Extraction for Code](#3-token-extraction-for-code)
@@ -16,7 +17,8 @@
 Use when: generating a semantic, implementation-ready HTML/CSS output from a Penpot frame.
 
 ### Full-page extraction prompt
-```
+
+```text
 ROLE: Senior Frontend Engineer. Expert in semantic HTML5 and CSS custom properties.
 You do not invent values not present in the Penpot file.
 
@@ -39,7 +41,8 @@ OUTPUT STRUCTURE:
 ```
 
 ### Prompt for a specific component
-```
+
+```text
 "Export the [ComponentName] component to React.
 
 Framework: React (functional component with hooks)
@@ -60,7 +63,8 @@ Do not invent interactive behavior not shown in the design."
 ## 2. Design to React Component
 
 ### Discovery first
-```
+
+```text
 "Inspect the [ComponentName] component on this page.
 List:
 1. All visual states (variants)
@@ -73,7 +77,8 @@ I will use this to write the component spec."
 ```
 
 ### Component generation
-```
+
+```text
 COMPONENT SPEC:
 Name: [ComponentName]
 States: [list from discovery]
@@ -95,12 +100,13 @@ Rules:
 ```
 
 ### Generating a full component library
-```
+
+```text
 "List all components on this page in a dependency-ordered list
-(primitives first, composites last). 
+(primitives first, composites last).
 
 For each component output:
-{ 
+{
   name: string,
   variants: string[],
   dependencies: string[],   // other components it uses
@@ -118,7 +124,8 @@ I will use this to plan the implementation order."
 Use when: setting up a design token pipeline (Style Dictionary, Theo, vanilla CSS variables).
 
 ### Extract full token set
-```
+
+```text
 GLOBAL RULESET - SOURCE: Penpot MCP - NO_GUESSING - OUTPUT: JSON only, no prose
 
 TASK: Extract all design tokens from this file.
@@ -132,7 +139,7 @@ OUTPUT FORMAT (JSON, no comments):
   },
   "spacing": { "xs": 4, "sm": 8, "md": 16, "lg": 24, "xl": 32 },
   "typography": {
-    "scale": { 
+    "scale": {
       "xs": { "size": 12, "lineHeight": 1.5, "weight": 400 },
       "sm": { "size": 14, "lineHeight": 1.5, "weight": 400 }
     }
@@ -145,21 +152,22 @@ SIZE CONSTRAINT: JSON only, concise, no explanations
 ```
 
 ### CSS custom properties output
-```
+
+```text
 "Convert the extracted tokens to CSS custom properties.
 
 FORMAT:
 :root {
   /* Color - Base */
   --color-base-neutral-100: #hex;
-  
+
   /* Color - Semantic */
   --color-bg-default: var(--color-base-neutral-100);
-  
+
   /* Spacing */
   --spacing-xs: 4px;
   --spacing-sm: 8px;
-  
+
   /* Typography */
   --type-scale-sm-size: 14px;
   --type-scale-sm-line-height: 1.5;
@@ -173,7 +181,8 @@ Rules:
 ```
 
 ### Style Dictionary config generation
-```
+
+```text
 "Generate a Style Dictionary configuration for this token set.
 
 Output:
@@ -192,7 +201,8 @@ Output:
 Use when: creating a living mapping document between design components and code implementation.
 
 ### Generate mapping table
-```
+
+```text
 "List all components in this file and generate a component mapping document.
 
 For each component output:
@@ -210,7 +220,8 @@ Output as JSON array. No prose."
 ```
 
 ### Sync documentation prompt
-```
+
+```text
 "For the [FrameName] screen, generate a handoff specification.
 
 SECTIONS:
@@ -230,7 +241,8 @@ FORMAT: Markdown. Max 200 lines total."
 Use when: implementing responsive layout from a Penpot design.
 
 ### Extract layout structure
-```
+
+```text
 "Analyze the layout of [FrameName].
 
 For each container, describe:
@@ -247,7 +259,8 @@ Max depth: 4 levels."
 ```
 
 ### Responsive behavior extraction
-```
+
+```text
 "This file has [N] breakpoints. For the [ComponentName] component:
 
 1. List the breakpoint frames (names and widths)
@@ -258,7 +271,7 @@ Max depth: 4 levels."
    - Size changes
 3. Output as a breakpoint map:
 
-{ 
+{
   mobile: { width: 375, changes: [...] },
   tablet: { width: 768, changes: [...] },
   desktop: { width: 1440, changes: [...] }
@@ -272,7 +285,8 @@ Max depth: 4 levels."
 Use when: extracting icons, images, and other assets from a Penpot design.
 
 ### Icon audit and export
-```
+
+```text
 "Find all icon shapes on this page (typically: small SVG shapes, <32px, in an 'icons' group).
 
 For each icon:
@@ -285,7 +299,8 @@ Output as JSON. Do not export yet — list first."
 ```
 
 ### Export command
-```
+
+```text
 "Export the following icons as SVG using export_shape:
 [list from audit]
 
@@ -294,7 +309,8 @@ Target: If local MCP, export to [path]. If remote, describe each SVG structure."
 ```
 
 ### Image asset inventory
-```
+
+```text
 "List all raster images on this page.
 For each: layer name, dimensions, placeholder vs real asset, suggested file name.
 Flag any images that appear duplicated (same visual but different layers)."
@@ -307,8 +323,9 @@ Flag any images that appear duplicated (same visual but different layers)."
 Use when: verifying that implemented code matches the current design.
 
 ### Design → Code drift check
-```
-"I will paste the current CSS for [ComponentName]. 
+
+```text
+"I will paste the current CSS for [ComponentName].
 Check it against the Penpot design.
 
 CSS TO CHECK:
@@ -327,7 +344,8 @@ Do not suggest code fixes for intentional overrides — only flag unintentional 
 ```
 
 ### Token usage audit
-```
+
+```text
 "Check whether the code is using the correct CSS variable names.
 Token map (design → CSS variable):
   color.text.primary → --color-text-primary
@@ -339,3 +357,4 @@ Analyze the pasted CSS and flag any:
 - Hardcoded spacing values
 - Incorrect variable names (typos or old names)"
 ```
+
