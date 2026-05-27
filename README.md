@@ -16,7 +16,7 @@ Works with any MCP-compatible client: **Claude Code**, **Cursor**, **VS Code / C
 
 - **Remote & local MCP setup** — up-to-date configs for all major MCP clients; Remote MCP recommended for most users
 - **All 5 MCP tools** — `execute_code`, `high_level_overview`, `penpot_api_info`, `export_shape`, `import_image`
-- **Penpot JS API patterns** — `penpotUtils` reference, read-only property gotchas, flex ordering quirks, board positioning, CSS export, plugin data API
+- **Penpot JS API patterns** — `penpotUtils` reference, read-only property gotchas, flex ordering quirks, board positioning, CSS export, plugin data API, community plugin boundaries
 - **Font & typography constraints** — installed variant detection, library vs. layer fontSize types, stale `fontId` limitation
 - **Write safety rules** — batch size limits (~10 ops/call), page-switch two-call pattern, structural verification over export
 - **Interactions & animations** — full `addInteraction` API, all triggers (`click`, `mouse-enter`, `mouse-leave`, `after-delay`), all actions (`navigate-to`, `open-overlay`, `toggle-overlay`, `close-overlay`, `previous-screen`, `open-url`), all animations (`Dissolve`, `Slide`, `Push`) with easing options

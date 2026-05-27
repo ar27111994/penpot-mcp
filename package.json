@@ -4,7 +4,7 @@
   "description": "AI-agent skill for creating, auditing, and maintaining production-grade Penpot design projects, design systems, flows, interactions, animations, tokens, and visual effects via the official Penpot MCP Server.",
   "scripts": {
     "lint": "eslint \"scripts/**/*.mjs\" eslint.config.mjs",
-    "format:check": "prettier --check package.json package-lock.json eslint.config.mjs scripts/**/*.mjs .github/workflows/**/*.yml",
+    "format:check": "prettier --check package.json package-lock.json eslint.config.mjs scripts/**/*.mjs .github/workflows/**/*.yml --end-of-line auto",
     "validate": "node scripts/validate-package.mjs",
     "check:whitespace": "git diff --check -- .github README.md package.json penpot-mcp scripts && git diff --cached --check -- .github README.md package.json penpot-mcp scripts"
   },

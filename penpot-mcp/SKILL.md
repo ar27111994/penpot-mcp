@@ -34,6 +34,8 @@ Penpot Plugin (running inside the open design file)
 
 MCP **always acts on the currently focused page** in the active Penpot browser tab. Only one tab can own MCP at a time.
 
+MCP runs through the Penpot MCP plugin. It does **not** provide a documented way to enumerate, install, launch, or drive arbitrary installed community plugins. Coordinate with other plugins only when the user explicitly asks or when file-visible evidence makes a plugin relevant.
+
 ---
 
 ## 1. Connection Setup
@@ -128,6 +130,15 @@ npx -y mcp-remote http://localhost:4401/mcp --allow-http
 ### Check connection first (always)
 
 Before any setup steps, **call `penpot_api_info` or `high_level_overview` first**. If it succeeds, skip setup entirely.
+
+### Community plugin guardrails
+
+- Do not assume MCP can read the user's installed plugin list or invoke another plugin's UI/API.
+- Prefer MCP-native reads/writes for normal design, prototyping, token, and export tasks.
+- If a community plugin could materially help, first look for file-visible evidence: generated layers, library assets, comments, or namespaced shared plugin data.
+- If the user provides an installed-plugin inventory, treat it as user-provided context and select a plugin only when the task clearly maps to that plugin's stated capability.
+- Ask for user confirmation before using or relying on any community plugin. If it has its own UI, ask the user to run it manually, then re-inspect the file.
+- Never use a plugin marketplace/browser plugin such as **Plugins list** unless the user explicitly asks to browse, search, discover, or install plugins. Do not search/install plugins automatically for routine tasks.
 
 ### JavaScript API
 
