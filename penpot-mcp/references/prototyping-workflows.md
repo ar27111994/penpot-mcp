@@ -117,7 +117,7 @@ const sequence = [
 const boards = penpotUtils.findShapes((s) => s.type === "board", penpot.root);
 const ordered = sequence.map((name) => boards.find((b) => b.name === name));
 
-const missing = ordered.filter((b) => !b).map((_, i) => sequence[i]);
+const missing = sequence.filter((_, i) => !ordered[i]);
 if (missing.length > 0) return { error: "Missing boards", missing };
 
 const results = [];
