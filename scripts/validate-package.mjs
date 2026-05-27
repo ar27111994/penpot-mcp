@@ -15,22 +15,27 @@ const requiredReferenceFiles = [
 const skippedDirectories = new Set([".git", "node_modules"]);
 const textFileExtensions = new Set([".json", ".md", ".mjs", ".yml", ".yaml"]);
 
+/** Records a validation failure without stopping later checks. */
 function fail(message) {
   failures.push(message);
 }
 
+/** Resolves a repository-relative path to an absolute path. */
 function repositoryPath(filePath) {
   return join(repositoryRoot, filePath);
 }
 
+/** Reads a UTF-8 file from a repository-relative path. */
 function readRepositoryFile(filePath) {
   return readFileSync(repositoryPath(filePath), "utf8");
 }
 
+/** Removes one pair of surrounding quotes from a YAML scalar value. */
 function stripQuotes(value) {
   return value.replace(/^['"]|['"]$/g, "");
 }
 
+/** Extracts a simple or folded scalar from the SKILL.md frontmatter. */
 function readFrontmatterValue(frontmatter, key) {
   const lines = frontmatter.split(/\r?\n/);
   const keyPattern = new RegExp(`^${key}:\\s*(.*)$`);
@@ -61,6 +66,7 @@ function readFrontmatterValue(frontmatter, key) {
   return "";
 }
 
+/** Validates root package metadata needed for publishing and discovery. */
 function validatePackageJson() {
   let packageJson;
   try {
@@ -91,6 +97,7 @@ function validatePackageJson() {
   return packageJson;
 }
 
+/** Ensures the README version badge cannot drift from package.json. */
 function validateReadmeVersionBadge(packageJson) {
   const readme = readRepositoryFile("README.md");
   const dynamicBadgePattern =
@@ -115,6 +122,7 @@ function validateReadmeVersionBadge(packageJson) {
   }
 }
 
+/** Validates the skill discovery frontmatter required by agent clients. */
 function validateSkillFrontmatter() {
   const skill = readRepositoryFile("penpot-mcp/SKILL.md");
   const frontmatterMatch = skill.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -137,6 +145,7 @@ function validateSkillFrontmatter() {
   }
 }
 
+/** Ensures all reference files advertised by the package exist. */
 function validateRequiredReferences() {
   for (const filePath of requiredReferenceFiles) {
     if (!existsSync(repositoryPath(filePath))) {
@@ -145,6 +154,7 @@ function validateRequiredReferences() {
   }
 }
 
+/** Splits a Markdown table row while ignoring pipes inside inline code. */
 function splitMarkdownTableRow(line) {
   const cells = [];
   let currentCell = "";
@@ -192,6 +202,7 @@ function splitMarkdownTableRow(line) {
   return cells;
 }
 
+/** Validates one contiguous Markdown table block for stable column counts. */
 function validateMarkdownTableBlock(filePath, rows) {
   if (rows.length < 2) return;
 
@@ -206,11 +217,13 @@ function validateMarkdownTableBlock(filePath, rows) {
   }
 }
 
+/** Validates Markdown tables while ignoring fenced code blocks. */
 function validateMarkdownTables(filePath) {
   const lines = readRepositoryFile(filePath).split(/\r?\n/);
   let activeFence = null;
   let tableRows = [];
 
+  /** Flushes the current candidate table block into the table validator. */
   function flushTableRows() {
     validateMarkdownTableBlock(filePath, tableRows);
     tableRows = [];
@@ -250,6 +263,7 @@ function validateMarkdownTables(filePath) {
   flushTableRows();
 }
 
+/** Collects repository text files that should be covered by validation. */
 function collectTextFiles(directoryPath = repositoryRoot) {
   const files = [];
 
@@ -273,6 +287,7 @@ function collectTextFiles(directoryPath = repositoryRoot) {
   return files;
 }
 
+/** Fails when a text file contains trailing spaces or tabs. */
 function validateTrailingWhitespace(filePath) {
   const lines = readRepositoryFile(filePath).split(/\r?\n/);
 

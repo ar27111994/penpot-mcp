@@ -48,11 +48,12 @@
 ## Skill Packaging
 
 - Keep YAML frontmatter valid in skill files. The `name` should match the skill folder, and descriptions should include concrete trigger phrases.
-- Do not add runtime dependencies, build tooling, or generated artifacts unless the task explicitly requires them. This package currently has metadata and validation scripts only in `package.json`.
+- Do not add runtime dependencies, build tooling, or generated artifacts unless the task explicitly requires them. This package currently has metadata plus dev-only validation and lint scripts in `package.json`.
 - Favor Markdown-only changes for workflow updates. Add scripts or tests only when they create a real validation path for future maintainers.
 
 ## Validation
 
+- Run `npm run lint` after changing JavaScript validation scripts or lint configuration.
 - Run `npm run validate` before publishing or after changing `README.md`, `package.json`, `penpot-mcp/SKILL.md`, or reference docs.
 - For Markdown-only edits, run `git diff --check -- <changed-files>` to catch whitespace issues and inspect the focused diff for accuracy.
 - For `package.json` edits, also validate JSON parsing with Node or npm before finishing.
