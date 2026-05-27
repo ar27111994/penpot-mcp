@@ -1,0 +1,42 @@
+name: Workflow recipe request
+description: Suggest a new Penpot MCP workflow, prompt pattern, or reference example
+labels: [enhancement, documentation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest generic, community-useful workflows only. Avoid private product details or unsupported Penpot behavior.
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Workflow
+      description: What should the skill help agents do?
+      placeholder: e.g. audit interaction coverage, normalize design tokens, prepare handoff assets.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: User scenario
+      description: When would an agent use this workflow?
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Constraints and safety notes
+      description: Include relevant batching, verification, accessibility, or plugin/API limitations.
+  - type: textarea
+    id: sources
+    attributes:
+      label: Sources or examples
+      description: Link official Penpot/MCP docs or provide generic examples.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmation
+      options:
+        - label: This request is generic and does not include private project data.
+          required: true
+        - label: This request does not depend on unsupported Penpot MCP behavior.
+          required: true

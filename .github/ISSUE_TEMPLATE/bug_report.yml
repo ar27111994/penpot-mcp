@@ -1,0 +1,41 @@
+name: Bug report
+description: Report incorrect, unsafe, or broken skill guidance
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve `penpot-mcp`. Do not include MCP keys, private Penpot URLs, or proprietary file contents.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is incorrect, unsafe, outdated, or broken?
+      placeholder: Describe the issue and where it appears.
+    validations:
+      required: true
+  - type: input
+    id: location
+    attributes:
+      label: Location
+      description: File, section, line, or URL if known.
+      placeholder: penpot-mcp/SKILL.md, README.md, reference section, etc.
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected guidance
+      description: What should the skill say or do instead?
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence / source
+      description: Link official docs, MCP behavior, or a minimal generic reproduction if possible.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety confirmation
+      options:
+        - label: I did not include secrets, MCP keys, private file contents, or proprietary project details.
+          required: true

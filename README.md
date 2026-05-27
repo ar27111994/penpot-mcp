@@ -2,6 +2,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/ar27111994/penpot-mcp?style=flat&logo=github)](https://github.com/ar27111994/penpot-mcp/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Validate](https://github.com/ar27111994/penpot-mcp/actions/workflows/validate.yml/badge.svg)](https://github.com/ar27111994/penpot-mcp/actions/workflows/validate.yml)
 [![Agent Skills](https://img.shields.io/badge/npx_skills_add-ar27111994%2Fpenpot--mcp-8B5CF6)](https://github.com/ar27111994/penpot-mcp)
 [![skills.sh](https://skills.sh/b/ar27111994/penpot-mcp)](https://skills.sh/ar27111994/penpot-mcp)
 [![Version](https://img.shields.io/github/package-json/v/ar27111994/penpot-mcp?label=version)](https://github.com/ar27111994/penpot-mcp)
@@ -74,7 +75,9 @@ Key differences:
 
 ## Contributing
 
-PRs welcome — especially for new workflow recipes, additional platform templates, or corrections as the Penpot MCP API evolves. See [Penpot community thread](https://community.penpot.app/t/penpot-mcp-skill/10599).
+PRs welcome — especially for new workflow recipes, additional platform templates, or corrections as the Penpot MCP API evolves. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Penpot community thread](https://community.penpot.app/t/penpot-mcp-skill/10599).
+
+Please report security issues according to [SECURITY.md](SECURITY.md).
 
 ## License
 
