@@ -6,7 +6,7 @@
     "lint": "eslint \"scripts/**/*.mjs\" eslint.config.mjs",
     "format:check": "prettier --check package.json package-lock.json eslint.config.mjs scripts/**/*.mjs .github/workflows/**/*.yml",
     "validate": "node scripts/validate-package.mjs",
-    "check:whitespace": "git diff --check -- .github README.md package.json penpot-mcp scripts"
+    "check:whitespace": "git diff --check -- .github README.md package.json penpot-mcp scripts && git diff --cached --check -- .github README.md package.json penpot-mcp scripts"
   },
   "author": "ar27111994",
   "license": "MIT",
