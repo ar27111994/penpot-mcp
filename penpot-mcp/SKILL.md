@@ -132,9 +132,10 @@ Page switching is asynchronous in the plugin bridge. Writing in the same call as
 **Use `storage` for large workflows:**
 ```javascript
 // Call 1: compute and store your design token data
-storage.DS = { colors: { primary: '#1B6CA8' }, ... };
+storage.tokenData = { colors: { primary: '#HEX' }, spacing: 8, ... };
 // Call 2+: retrieve from storage instead of recomputing
-const DS = storage.DS || fallback;
+const fallback = { colors: {}, spacing: 8 }; // safe default if session reset
+const DS = storage.tokenData || fallback;
 ```
 
 **Starter prompts (always run first after connecting):**
@@ -251,12 +252,12 @@ Use ensureTypography. Check installed font variants first."
 
 **Multi-page design system:**
 ```
-"Create pages: Foundations, Mobile, Tablet, Web, Widgets — all in one call.
-Then report current page list before doing anything else."
+"Create pages: [Page1], [Page2], [Page3] — all in one call (list all pages to create).
+Then report the current page list before doing anything else."
 
-"Switch to page Foundations. Confirm currentPage before writing."
+"Switch to page [PageName]. Confirm currentPage before writing."
 
-"Build the Foundations / Tokens board on the current Foundations page.
+"Build the [BoardName] board on the current [PageName] page.
 Max 8 shapes per call. Pause after."
 ```
 
@@ -273,9 +274,9 @@ Max 8 shapes per call. Pause after."
 
 **Visual effects:**
 ```
-"Apply glassmorphism to the [BoardName] overlay:
-20px layer-blur, 20px borderRadius, semi-transparent surface fill,
-shadow: 0 8 32 0 rgba(0,83,135,0.06). No 1px layout borders."
+"Apply a backdrop blur effect to the [BoardName] overlay:
+[N]px layer-blur, [N]px borderRadius, semi-transparent surface fill,
+and a drop shadow. Describe the values you'll use before applying."
 
 "Add linear gradient fill to [ShapeName]: brand primary → transparent, top to bottom."
 ```
@@ -285,25 +286,25 @@ shadow: 0 8 32 0 rgba(0,83,135,0.06). No 1px layout borders."
 ## 7. Design File Best Practices
 
 ### File & page structure
-- Separate pages by domain: `Foundations`, `Mobile`, `Tablet`, `Web`, `Widgets`
-- Or by atomic level: `Tokens`, `Primitives`, `Components`, `Patterns`
+- Choose one page organisation strategy:
+  - **Domain-based**: e.g. `Foundations`, `Mobile`, `Desktop`
+  - **Atomic-level**: e.g. `Tokens`, `Primitives`, `Components`, `Patterns`
 - Canvas: wireframes left → final design right
 - Every board has a clear purpose and visual entry point
 
 ### Layer naming
 - Function-based: `background`, `icon-close`, `label-primary` ✅
 - Not appearance-based: `rectangle-23`, `blue-box` ❌
-- Hierarchy with `/`: `component/note-row/default`, `overlay/confirm-delete`
+- Hierarchy with `/`: `component/card/default`, `overlay/confirm-delete`
 
 ### Components
-- Naming: `mobile/note-row/default`, `tablet/split-pane-shell`
+- Naming: `mobile/card/default`, `mobile/nav-bar`
 - Register from source shapes via `createComponent([shapes])`
 - Clone source shape first if it's already placed on a page
 
 ### Spacing & layout
 - Base unit: 8px. All margins/paddings derived from it.
 - No invisible rectangles for spacing — use Flex/Grid layout
-- No 1px solid borders for layout separation (use tonal surfaces, spacing, elevation)
 
 ### Visual effects & glassmorphism
 - Glass recipe: `blurs: [{ type: 'layer-blur', value: 20 }]` + `borderRadius: 20` + shadow
@@ -371,3 +372,4 @@ shadow: 0 8 32 0 rgba(0,83,135,0.06). No 1px layout borders."
 | `storage` resets on server restart | Always use `|| fallback` when reading |
 | `Page.findShapes()` takes criteria object | `page.findShapes({ type: 'board' })` not a predicate |
 | `createComponent` wraps an array | `createComponent([shape])` not `createComponent(shape)` |
+
