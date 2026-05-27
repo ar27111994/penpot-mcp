@@ -4,6 +4,7 @@
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Agent Skills](https://img.shields.io/badge/npx_skills_add-ar27111994%2Fpenpot--mcp-8B5CF6)](https://github.com/ar27111994/penpot-mcp)
 [![skills.sh](https://skills.sh/b/ar27111994/penpot-mcp)](https://skills.sh/ar27111994/penpot-mcp)
+[![GitHub tag](https://img.shields.io/github/v/tag/ar27111994/penpot-mcp?sort=semver&logo=github)](https://github.com/ar27111994/penpot-mcp/tags)
 
 > AI-agent skill for creating, auditing, and maintaining production-grade design projects and design systems — including flows, interactions, animations, and overlays — in [Penpot](https://penpot.app) via the official [Penpot MCP Server](https://help.penpot.app/mcp/).
 
@@ -29,11 +30,13 @@ Works with any MCP-compatible client: **Claude Code**, **Cursor**, **VS Code / C
 ## Install
 
 **Via npx (Claude Code / Codex CLI):**
+
 ```bash
 npx skills add ar27111994/penpot-mcp
 ```
 
 **Via gh CLI:**
+
 ```bash
 gh skills install ar27111994/penpot-mcp
 ```
@@ -42,7 +45,7 @@ gh skills install ar27111994/penpot-mcp
 
 ## File structure
 
-```
+```text
 penpot-mcp/
 ├── SKILL.md                                ← Always-loaded core (~340 lines)
 └── references/
@@ -59,6 +62,7 @@ penpot-mcp/
 Built directly from the [official Penpot MCP documentation](https://help.penpot.app/mcp/) and plugin API docs at [doc.plugins.penpot.app](https://doc.plugins.penpot.app), cross-referenced against the [`github/awesome-copilot` penpot-uiux-design skill](https://github.com/github/awesome-copilot/tree/main/skills/penpot-uiux-design) and battle-tested in production.
 
 Key differences:
+
 - ✅ Covers **Remote MCP** and all major MCP client configs (Cursor, Claude Code, VS Code, Codex, Claude Desktop)
 - ✅ `npx @penpot/mcp@stable` — not the outdated `git clone` approach
 - ✅ Correct VS Code config key (`mcp.servers`, not `mcpServers`)
@@ -75,3 +79,4 @@ PRs welcome — especially for new workflow recipes, additional platform templat
 ## License
 
 MIT
+
