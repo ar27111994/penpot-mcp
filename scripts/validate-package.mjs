@@ -208,7 +208,7 @@ function validateMarkdownTableBlock(filePath, rows) {
 
 function validateMarkdownTables(filePath) {
   const lines = readRepositoryFile(filePath).split(/\r?\n/);
-  let inFence = false;
+  let activeFence = null;
   let tableRows = [];
 
   function flushTableRows() {
@@ -217,13 +217,29 @@ function validateMarkdownTables(filePath) {
   }
 
   lines.forEach((line, index) => {
-    if (/^\s*(```|~~~)/.test(line)) {
-      flushTableRows();
-      inFence = !inFence;
+    const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/);
+
+    if (fenceMatch) {
+      const fenceMarker = fenceMatch[1];
+      const fenceCharacter = fenceMarker[0];
+
+      if (!activeFence) {
+        flushTableRows();
+        activeFence = { character: fenceCharacter, length: fenceMarker.length };
+        return;
+      }
+
+      if (
+        activeFence.character === fenceCharacter &&
+        fenceMarker.length >= activeFence.length
+      ) {
+        activeFence = null;
+      }
+
       return;
     }
 
-    if (!inFence && line.trim().startsWith("|") && line.includes("|")) {
+    if (!activeFence && line.trim().startsWith("|") && line.includes("|")) {
       tableRows.push({ line, lineNumber: index + 1 });
       return;
     }

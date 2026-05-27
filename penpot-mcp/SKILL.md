@@ -152,7 +152,7 @@ Before any setup steps, **call `penpot_api_info` or `high_level_overview` first*
 
 **Page switching — mandatory two-call pattern:**
 
-```
+```text
 Call N:   penpot.openPage(page)    ← switch page
 Call N+1: write/read on that page  ← write after switch
 ```
@@ -254,7 +254,7 @@ STYLE
 
 ### Token hierarchy
 
-```
+```text
 Tier 1 (Global):    color.base.neutral.100, spacing.base.8
 Tier 2 (Semantic):  color.bg.default, color.text.primary
 Tier 3 (Component): color.button.primary.bg
