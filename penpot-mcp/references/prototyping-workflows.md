@@ -108,11 +108,16 @@ back.addInteraction("click", {
 
 ```javascript
 // Wire a sequence: boards must be in order
-const sequence = ["screen-1", "screen-2", "screen-3", "screen-4"];
+const sequence = [
+  "/screens/screen-1",
+  "/screens/screen-2",
+  "/screens/screen-3",
+  "/screens/screen-4",
+];
 const boards = penpotUtils.findShapes((s) => s.type === "board", penpot.root);
 const ordered = sequence.map((name) => boards.find((b) => b.name === name));
 
-const missing = ordered.filter((b) => !b).map((_, i) => sequence[i]);
+const missing = sequence.filter((_, i) => !ordered[i]);
 if (missing.length > 0) return { error: "Missing boards", missing };
 
 const results = [];
@@ -140,11 +145,21 @@ Use when: adding modals, tooltips, drawers, or confirmation dialogs.
 // Overlay boards should be sized to match their content, not the full screen
 // Position doesn't matter on canvas — Penpot positions them relative to trigger at runtime
 
+const sourceBoard = penpotUtils.findShape((s) => s.name === "/screens/settings");
+const boards = penpotUtils.findShapes((s) => s.type === "board", penpot.root);
 const modal = boards.find((b) => b.name === "overlay/confirm-delete");
-const trigger = penpotUtils.findShapes(
-  (s) => s.name === "btn-delete",
-  sourceboard,
-)[0];
+const trigger = sourceBoard
+  ? penpotUtils.findShapes((s) => s.name === "btn-delete", sourceBoard)[0]
+  : null;
+
+if (!modal || !trigger) {
+  return {
+    skipped: true,
+    reason: "Missing overlay board or trigger",
+    modal: Boolean(modal),
+    trigger: Boolean(trigger),
+  };
+}
 
 trigger.addInteraction("click", {
   type: "open-overlay",
@@ -284,13 +299,14 @@ const allBoards = penpotUtils.findShapes(
 );
 let removed = 0;
 // Batch: 5 boards at a time
-allBoards.slice(0, 5).forEach((board) => {
+const processed = allBoards.slice(0, 5);
+processed.forEach((board) => {
   (board.interactions || []).forEach((i) => {
     i.remove();
     removed++;
   });
 });
-return { removedCount: removed, remaining: Math.max(allBoards.length - 5, 0) };
+return { removedCount: removed, remaining: allBoards.length - processed.length };
 ```
 
 ---

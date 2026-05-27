@@ -159,6 +159,19 @@ page.setPluginData("role", "foundations");
 shape.setSharedPluginData("design-system", "token", "color.primary.500");
 ```
 
+### Community plugin boundaries
+
+The Penpot MCP Server runs through the Penpot MCP plugin and exposes the Penpot Plugin API. Do not assume it can list installed community plugins, install plugins, launch another plugin, or call another plugin's private UI/API. The documented plugin API supports file content, libraries, comments, user data, and plugin/shared plugin data according to the active plugin's manifest permissions; it is not a general installed-plugin automation bus.
+
+Safe coordination pattern:
+
+1. Use MCP to inspect the file first.
+2. If a task appears to need a community plugin, check only for file-visible evidence such as generated layers, library assets, comments, or namespaced shared plugin data.
+3. If the user provides an installed-plugin inventory, treat it as user-provided context and choose a plugin only when the task clearly maps to that plugin's stated capability.
+4. If the plugin must run, ask the user to confirm the exact installed plugin and whether they want it used.
+5. Ask the user to run that plugin manually when it requires its own UI or permissions, then re-inspect the file with MCP.
+6. Never browse, search, or install plugins from an agent loop unless the user explicitly requested plugin discovery or installation.
+
 ---
 
 ## 3. CRITICAL API Gotchas
@@ -221,9 +234,9 @@ for (let i = 0; i < shapes.length; i += 5) {
 // List all pages (returns {id, name}[] — lightweight)
 const pages = penpotUtils.getPages(); // [{id, name}]
 
-// Get Page object by name (full Page API)
-const page = penpotUtils.getPageByName("Mobile"); // Page | null
-const page = penpotUtils.getPageById("uuid"); // Page | null
+// Get Page object by name/id (full Page API)
+const pageByName = penpotUtils.getPageByName("Mobile"); // Page | null
+const pageById = penpotUtils.getPageById("uuid"); // Page | null
 
 // Current page
 const currentPage = penpot.currentPage; // Page | null
@@ -234,6 +247,8 @@ const currentPage = penpot.currentPage; // Page | null
 ```javascript
 // Criteria-based search on a specific page — cleaner than predicate on root
 const page = penpotUtils.getPageByName("Mobile");
+if (!page) return { error: "Page not found", pageName: "Mobile" };
+
 const boards = page.findShapes({ type: "board" });
 const named = page.findShapes({ name: "Header" });
 const like = page.findShapes({ nameLike: "btn-" });
@@ -707,7 +722,7 @@ function ensureSet(name) {
 // Idempotent token addition
 function addToken(set, type, name, value) {
   return (
-    set.tokens.find((t) => t.name === name) ||
+    set.tokens.find((t) => t.name === name && t.type === type) ||
     set.addToken({ type, name, value: String(value) })
   );
 }
@@ -826,7 +841,7 @@ const pages = penpotUtils.getPages().map((p) => {
   const page = penpotUtils.getPageByName(p.name);
   return {
     name: p.name,
-    boardCount: page.findShapes({ type: "board" }).length,
+    boardCount: page ? page.findShapes({ type: "board" }).length : 0,
   };
 });
 

@@ -2,6 +2,7 @@
 
 [![GitHub Stars](https://img.shields.io/github/stars/ar27111994/penpot-mcp?style=flat&logo=github)](https://github.com/ar27111994/penpot-mcp/stargazers)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Validate](https://github.com/ar27111994/penpot-mcp/actions/workflows/validate.yml/badge.svg)](https://github.com/ar27111994/penpot-mcp/actions/workflows/validate.yml)
 [![Agent Skills](https://img.shields.io/badge/npx_skills_add-ar27111994%2Fpenpot--mcp-8B5CF6)](https://github.com/ar27111994/penpot-mcp)
 [![skills.sh](https://skills.sh/b/ar27111994/penpot-mcp)](https://skills.sh/ar27111994/penpot-mcp)
 [![Version](https://img.shields.io/github/package-json/v/ar27111994/penpot-mcp?label=version)](https://github.com/ar27111994/penpot-mcp)
@@ -16,7 +17,7 @@ Works with any MCP-compatible client: **Claude Code**, **Cursor**, **VS Code / C
 
 - **Remote & local MCP setup** — up-to-date configs for all major MCP clients; Remote MCP recommended for most users
 - **All 5 MCP tools** — `execute_code`, `high_level_overview`, `penpot_api_info`, `export_shape`, `import_image`
-- **Penpot JS API patterns** — `penpotUtils` reference, read-only property gotchas, flex ordering quirks, board positioning, CSS export, plugin data API
+- **Penpot JS API patterns** — `penpotUtils` reference, read-only property gotchas, flex ordering quirks, board positioning, CSS export, plugin data API, community plugin boundaries
 - **Font & typography constraints** — installed variant detection, library vs. layer fontSize types, stale `fontId` limitation
 - **Write safety rules** — batch size limits (~10 ops/call), page-switch two-call pattern, structural verification over export
 - **Interactions & animations** — full `addInteraction` API, all triggers (`click`, `mouse-enter`, `mouse-leave`, `after-delay`), all actions (`navigate-to`, `open-overlay`, `toggle-overlay`, `close-overlay`, `previous-screen`, `open-url`), all animations (`Dissolve`, `Slide`, `Push`) with easing options
@@ -74,7 +75,9 @@ Key differences:
 
 ## Contributing
 
-PRs welcome — especially for new workflow recipes, additional platform templates, or corrections as the Penpot MCP API evolves. See [Penpot community thread](https://community.penpot.app/t/penpot-mcp-skill/10599).
+PRs welcome — especially for new workflow recipes, additional platform templates, or corrections as the Penpot MCP API evolves. See [CONTRIBUTING.md](CONTRIBUTING.md) and the [Penpot community thread](https://community.penpot.app/t/penpot-mcp-skill/10599).
+
+Please report security issues according to [SECURITY.md](SECURITY.md).
 
 ## License
 

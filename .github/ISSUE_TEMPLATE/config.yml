@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Penpot MCP Skill community thread
+    url: https://community.penpot.app/t/penpot-mcp-skill/10599
+    about: Discuss usage, feedback, and community updates.
+  - name: Official Penpot MCP documentation
+    url: https://help.penpot.app/mcp/
+    about: Check official setup and MCP server documentation.
