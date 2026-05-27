@@ -27,7 +27,7 @@ Concrete JavaScript for `execute_code`, critical gotchas, font/typography constr
 
 ## 1. Always Check Connection First
 
-```
+```text
 Call: mcp__penpot__penpot_api_info  (or high_level_overview)
 ```
 
@@ -170,6 +170,7 @@ shape.setSharedPluginData("design-system", "token", "color.primary.500");
 | `shape.x` / `shape.y` for parented shapes   | ❌ READ-ONLY              | `penpotUtils.setParentXY(shape, x, y)`             |
 | `shape.x` / `shape.y` for root-level shapes | ✅ Works                  | Direct assignment OK for top-level boards          |
 | Z-ordering via `appendChild`                | ❌ Ignores order          | `insertChild(index, shape)`                        |
+| `penpot.createText(...)`                    | ⚠️ Nullable               | Check result before resize/style calls             |
 | Text clips after `resize()`                 | ⚠️ Reset required         | Set `growType` after every `text.resize()`         |
 | Flex children order                         | ⚠️ Reversed               | For column: last inserted = visually top           |
 | Page switch + write in same call            | ❌ Writes to wrong page   | Two calls: switch page, then write                 |
@@ -192,6 +193,8 @@ container.insertChild(2, header); // top ← counter-intuitive
 
 ```javascript
 const label = penpot.createText("Button Label");
+if (!label) return { error: "Text creation failed" };
+
 label.resize(120, 0);
 label.growType = "auto-height"; // MUST follow every resize
 label.fontSize = "14"; // string
@@ -659,7 +662,7 @@ The `storage` object persists across all `execute_code` calls within a single MC
 
 ```javascript
 // ── Call 1: store design system data ──
-const DS = { colors: { primary: '#RRGGBB' }, typography: [] };
+const DS = { colors: { primary: "#RRGGBB" }, typography: [] };
 storage.designSystem = DS;
 return { stored: true, colorCount: Object.keys(DS.colors).length };
 ```
@@ -671,14 +674,17 @@ const DS = storage.designSystem || fallback; // fallback if session reset
 const C = DS.colors;
 
 // Pattern for processing queues
-storage.shapesToProcess = allShapes.map(s => s.id);
+storage.shapesToProcess = allShapes.map((s) => s.id);
 storage.processed = [];
 
 // Later call:
 const id = storage.shapesToProcess.shift();
 const shape = penpotUtils.findShapeById(id);
 storage.processed.push(id);
-return { remaining: storage.shapesToProcess.length, done: storage.processed.length };
+return {
+  remaining: storage.shapesToProcess.length,
+  done: storage.processed.length,
+};
 ```
 
 > **Note:** `storage` is session-scoped — it resets when the MCP server is restarted. Always use `|| fallback` when reading from storage.
@@ -1050,7 +1056,7 @@ return {
 
 ### Mobile (375×812)
 
-```
+```text
 ┌─────────────────────────────┐
 │ Status Bar          (44px)  │
 ├─────────────────────────────┤
@@ -1070,7 +1076,7 @@ return {
 
 ### Desktop Dashboard (1440×900)
 
-```
+```text
 ┌──────┬──────────────────────────────────┐
 │Sidebar│ Header                  (64px)  │
 │ 240px ├──────────────────────────────────┤
@@ -1137,13 +1143,13 @@ platforms.forEach(({ name, w, h }) => {
 
 ### Border radius
 
-| Token         | Value  | Usage          |
-| ------------- | ------ | -------------- |
-| `radius-sm`   | 4px    | Inputs, tags   |
-| `radius-md`   | 8px    | Cards          |
-| `radius-lg`   | 16px   | Panels         |
-| `radius-full` | 9999px | Pills, avatars |
-| `radius-overlay` | 20px | Overlays, glass panels |
+| Token            | Value  | Usage                  |
+| ---------------- | ------ | ---------------------- |
+| `radius-sm`      | 4px    | Inputs, tags           |
+| `radius-md`      | 8px    | Cards                  |
+| `radius-lg`      | 16px   | Panels                 |
+| `radius-full`    | 9999px | Pills, avatars         |
+| `radius-overlay` | 20px   | Overlays, glass panels |
 
 ---
 
@@ -1188,4 +1194,3 @@ platforms.forEach(({ name, w, h }) => {
 - [ ] All layers semantically named
 - [ ] No hard-coded colors or spacing
 - [ ] Interactions wired and verified
-

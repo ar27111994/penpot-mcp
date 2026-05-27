@@ -9,4 +9,51 @@
 - **Active plugins**: none
 
 ---
+
 <!-- USER INSTRUCTIONS BELOW THIS LINE — preserved across re-generation runs -->
+
+# Project Guidelines
+
+## Repository Purpose
+
+- This repository packages the `penpot-mcp` agent skill. Treat it as documentation and workflow content for AI agents, not as a JavaScript application runtime.
+- Keep `penpot-mcp/SKILL.md` as the concise always-loaded core. Put longer task recipes, API details, and examples in `penpot-mcp/references/*.md`.
+- Keep `README.md`, `package.json`, and `penpot-mcp/SKILL.md` aligned when changing the public description, supported workflows, tool list, install guidance, or release metadata.
+
+## Source Layout
+
+- `penpot-mcp/SKILL.md`: trigger description, setup guidance, safety workflow, common prompts, and critical gotchas.
+- `penpot-mcp/references/penpot-api-patterns.md`: authoritative Penpot plugin API patterns, JavaScript examples, and low-level gotchas.
+- `penpot-mcp/references/design-system-workflows.md`: design system creation, audit, migration, and component library workflows.
+- `penpot-mcp/references/design-to-code-workflows.md`: HTML/CSS, React, token extraction, asset export, and design-code sync workflows.
+- `penpot-mcp/references/prototyping-workflows.md`: flows, overlays, interactions, animations, and prototype audit workflows.
+
+## Authoring Style
+
+- Write for AI agents. Prefer direct, imperative, testable rules such as "Always", "Never", "Use when", and "Verify".
+- Keep instructions compact and scannable with headings, checklists, tables, and fenced examples. Move long explanations to reference files instead of expanding `SKILL.md`.
+- Preserve exact Penpot MCP tool names: `high_level_overview`, `penpot_api_info`, `execute_code`, `export_shape`, and `import_image`.
+- Use deterministic examples: stable names, explicit input/output formats, compact JSON schemas, and clear pause or approval points.
+- When changing a rule or gotcha, search nearby docs for duplicated guidance and update related mentions so the skill does not contradict itself.
+
+## Penpot MCP Invariants
+
+- Always inspect first with `penpot_api_info` or `high_level_overview`; only guide setup when the connection check fails.
+- Follow the read, plan, write, verify workflow for Penpot changes. Describe intended writes before applying them.
+- Keep writes in small batches, usually 5 to 10 shape operations per `execute_code` call, and verify structurally after each batch.
+- Never switch pages and write in the same `execute_code` call. Use one call for `penpot.openPage(...)`, then a separate call for writes.
+- Verify via the Penpot API and structure reads. Treat `export_shape` as best-effort because it can fail over HTTP.
+- Preserve documented API gotchas: use `resize()` for shape size, `penpotUtils.setParentXY()` for parented coordinates, `insertChild()` for z-order, guard nullable `penpot.createText(...)` results before resizing or styling, reset text `growType` after resize, and keep typography numeric fields as strings where documented.
+
+## Skill Packaging
+
+- Keep YAML frontmatter valid in skill files. The `name` should match the skill folder, and descriptions should include concrete trigger phrases.
+- Do not add runtime dependencies, build tooling, or generated artifacts unless the task explicitly requires them. This package currently has metadata and validation scripts only in `package.json`.
+- Favor Markdown-only changes for workflow updates. Add scripts or tests only when they create a real validation path for future maintainers.
+
+## Validation
+
+- Run `npm run validate` before publishing or after changing `README.md`, `package.json`, `penpot-mcp/SKILL.md`, or reference docs.
+- For Markdown-only edits, run `git diff --check -- <changed-files>` to catch whitespace issues and inspect the focused diff for accuracy.
+- For `package.json` edits, also validate JSON parsing with Node or npm before finishing.
+- If examples include JavaScript intended for `execute_code`, check them against `penpot-mcp/references/penpot-api-patterns.md` before publishing.

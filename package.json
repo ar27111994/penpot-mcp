@@ -1,7 +1,11 @@
 {
   "name": "penpot-mcp",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "AI-agent skill for creating, auditing, and maintaining production-grade Penpot design projects, design systems, flows, interactions, animations, tokens, and visual effects via the official Penpot MCP Server.",
+  "scripts": {
+    "validate": "node scripts/validate-package.mjs",
+    "check:whitespace": "git diff --check -- .github README.md package.json penpot-mcp scripts"
+  },
   "author": "ar27111994",
   "license": "MIT",
   "keywords": [

@@ -357,4 +357,3 @@ Analyze the pasted CSS and flag any:
 - Hardcoded spacing values
 - Incorrect variable names (typos or old names)"
 ```
-
