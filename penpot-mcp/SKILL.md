@@ -39,6 +39,7 @@ MCP **always acts on the currently focused page** in the active Penpot browser t
 ## 1. Connection Setup
 
 ### Remote MCP (recommended for most users)
+
 1. Penpot → **Your account → Integrations → MCP Server** → enable
 2. Generate MCP key (shown once — store safely; only one key per user at a time)
 3. Copy server URL: `https://<your-penpot-domain>/mcp/stream?userToken=YOUR_MCP_KEY`
@@ -46,10 +47,12 @@ MCP **always acts on the currently focused page** in the active Penpot browser t
 5. Open a design file → **File → MCP Server → Connect**
 
 ### Local MCP (advanced; extra file-system access)
+
 ```bash
 npx @penpot/mcp@stable   # keep running; matches current Penpot release
 npx @penpot/mcp@beta     # for beta/test environments
 ```
+
 - Load plugin: **Plugins → Load from URL** → `http://localhost:4400/manifest.json`
 - Click **Connect to MCP server** in plugin UI → keep plugin window open at all times
 - Client URL: `http://localhost:4401/mcp` (no auth)
@@ -58,27 +61,49 @@ npx @penpot/mcp@beta     # for beta/test environments
 ### Client Config Snippets
 
 **Claude Code** (`.claude/settings.json`):
+
 ```json
-{ "mcpServers": { "penpot": { "transport": "http", "url": "REMOTE_OR_LOCAL_URL" } } }
+{
+  "mcpServers": {
+    "penpot": { "transport": "http", "url": "REMOTE_OR_LOCAL_URL" }
+  }
+}
 ```
+
 **Cursor**:
+
 ```json
 { "mcpServers": { "penpot": { "url": "REMOTE_OR_LOCAL_URL", "type": "http" } } }
 ```
+
 **VS Code / Copilot** (`settings.json`):
+
 ```json
-{ "mcp.servers": { "penpot": { "transport": "http", "url": "REMOTE_OR_LOCAL_URL" } } }
+{
+  "mcp.servers": {
+    "penpot": { "transport": "http", "url": "REMOTE_OR_LOCAL_URL" }
+  }
+}
 ```
+
 **Codex / OpenCode**:
+
 ```json
-{ "servers": { "penpot": { "url": "REMOTE_OR_LOCAL_URL", "transport": { "type": "http" } } } }
+{
+  "servers": {
+    "penpot": { "url": "REMOTE_OR_LOCAL_URL", "transport": { "type": "http" } }
+  }
+}
 ```
+
 **Claude Desktop** (stdio-only — requires proxy):
+
 ```bash
 npx -y mcp-remote http://localhost:4401/mcp --allow-http
 ```
 
 ### Troubleshooting Checklist
+
 - Restart MCP server process
 - Reconnect plugin (**File → MCP Server → Connect**)
 - Restart MCP client / reload tools
@@ -90,20 +115,22 @@ npx -y mcp-remote http://localhost:4401/mcp --allow-http
 
 ## 2. Available MCP Tools
 
-| Tool | Mode | Description |
-|------|------|-------------|
-| `high_level_overview` | Both | Read overall file structure, pages, layers, components |
-| `penpot_api_info` | Both | Query Penpot plugin API documentation |
-| `execute_code` | Both | Run JavaScript in Penpot plugin context — primary read/write tool |
-| `export_shape` | Both | Export shape as PNG/SVG (remote: limited; may fail with HTTP error) |
-| `import_image` | Local only | Import image from local file path into design |
+| Tool                  | Mode       | Description                                                         |
+| --------------------- | ---------- | ------------------------------------------------------------------- |
+| `high_level_overview` | Both       | Read overall file structure, pages, layers, components              |
+| `penpot_api_info`     | Both       | Query Penpot plugin API documentation                               |
+| `execute_code`        | Both       | Run JavaScript in Penpot plugin context — primary read/write tool   |
+| `export_shape`        | Both       | Export shape as PNG/SVG (remote: limited; may fail with HTTP error) |
+| `import_image`        | Local only | Import image from local file path into design                       |
 
 > Remote MCP cannot import images from local paths. `export_shape` may fail with HTTP errors — always verify structurally via API rather than relying on export success.
 
 ### Check connection first (always)
+
 Before any setup steps, **call `penpot_api_info` or `high_level_overview` first**. If it succeeds, skip setup entirely.
 
 ### JavaScript API
+
 `execute_code` runs JS against the Penpot plugin API. **Read `references/penpot-api-patterns.md` before any `execute_code` calls.** It covers the full API including tokens, library creation, page management, visual effects, storage, and idempotency helpers.
 
 ---
@@ -118,18 +145,22 @@ Before any setup steps, **call `penpot_api_info` or `high_level_overview` first*
 ```
 
 **Write call limits — enforce strictly:**
+
 - Max ~5–10 shape operations per `execute_code` call
 - Pause and verify between batches
 - Never "build everything" in one call — MCP writes time out on large batches, leaving partial updates with no error indication
 
 **Page switching — mandatory two-call pattern:**
-```
+
+```text
 Call N:   penpot.openPage(page)    ← switch page
 Call N+1: write/read on that page  ← write after switch
 ```
-Page switching is asynchronous in the plugin bridge. Writing in the same call as `openPage` applies changes to the *previously* active page. Exception: calling `openPage` at the top of a call then immediately reading (not writing) can be reliable.
+
+Page switching is asynchronous in the plugin bridge. Writing in the same call as `openPage` applies changes to the _previously_ active page. Exception: calling `openPage` at the top of a call then immediately reading (not writing) can be reliable.
 
 **Use `storage` for large workflows:**
+
 ```javascript
 // Call 1: compute and store your design token data
 storage.tokenData = { colors: { primary: '#HEX' }, spacing: 8, ... };
@@ -139,6 +170,7 @@ const DS = storage.tokenData || fallback;
 ```
 
 **Starter prompts (always run first after connecting):**
+
 ```
 "List all pages in this file."
 "Show all components on this page."
@@ -150,6 +182,7 @@ const DS = storage.tokenData || fallback;
 ## 4. Role & Prompt Engineering
 
 ### Define the agent role precisely
+
 ```
 BAD:  "You are a creative designer."
 GOOD: "You are a Senior Product Designer expert in design systems, WCAG accessibility,
@@ -159,6 +192,7 @@ GOOD: "You are a Senior Product Designer expert in design systems, WCAG accessib
 ```
 
 ### Structured Brief Template
+
 ```
 CONTEXT: [product name, target user, current state of file]
 GOAL: [specific problem — e.g., "build design token system and foundations page"]
@@ -174,6 +208,7 @@ QUALITY CRITERIA: [how you'll know it's done]
 ```
 
 ### Negatives (always include)
+
 - "Do not invent colors not in the token set."
 - "Do not use font weights not confirmed installed for this font family."
 - "Do not switch page and write in the same execute_code call."
@@ -181,6 +216,7 @@ QUALITY CRITERIA: [how you'll know it's done]
 - "Do not create duplicate colors/typographies — always check before creating."
 
 ### Iteration pattern
+
 ```
 1. Discovery  → read all pages, library assets, tokens, existing components
 2. Proposal   → describe planned structure, wait for approval
@@ -195,6 +231,7 @@ QUALITY CRITERIA: [how you'll know it's done]
 ## 5. Token-Aware Prompting
 
 ### Global RULESET block (prepend to every design-system prompt)
+
 ```
 GLOBAL RULESET
 - SOURCE: Penpot MCP only
@@ -216,11 +253,13 @@ STYLE
 ```
 
 ### Token hierarchy
-```
+
+```text
 Tier 1 (Global):    color.base.neutral.100, spacing.base.8
 Tier 2 (Semantic):  color.bg.default, color.text.primary
 Tier 3 (Component): color.button.primary.bg
 ```
+
 Reference tokens can be other tokens: `'{color.base.neutral.100}'` — use curly brace syntax.
 
 ---
@@ -228,7 +267,8 @@ Reference tokens can be other tokens: `'{color.base.neutral.100}'` — use curly
 ## 6. Workflow Recipes
 
 Read the relevant reference before starting:
-- **Full API, tokens, page management, storage, visual effects** → `references/penpot-api-patterns.md` *(mandatory before any `execute_code` calls)*
+
+- **Full API, tokens, page management, storage, visual effects** → `references/penpot-api-patterns.md` _(mandatory before any `execute_code` calls)_
 - **Design system creation/audit** → `references/design-system-workflows.md`
 - **Design-to-code generation** → `references/design-to-code-workflows.md`
 - **Prototyping: flows, interactions, animations** → `references/prototyping-workflows.md`
@@ -236,6 +276,7 @@ Read the relevant reference before starting:
 ### Quick reference: Common task prompts
 
 **Design system from scratch:**
+
 ```
 "Read all existing pages, colors, typographies, and token sets in this file."
 
@@ -251,6 +292,7 @@ Use ensureTypography. Check installed font variants first."
 ```
 
 **Multi-page design system:**
+
 ```
 "Create pages: [Page1], [Page2], [Page3] — all in one call (list all pages to create).
 Then report the current page list before doing anything else."
@@ -262,6 +304,7 @@ Max 8 shapes per call. Pause after."
 ```
 
 **Prototyping tasks:**
+
 ```
 "List all boards on this page and their existing interactions."
 
@@ -273,6 +316,7 @@ Max 8 shapes per call. Pause after."
 ```
 
 **Visual effects:**
+
 ```
 "Apply a backdrop blur effect to the [BoardName] overlay:
 [N]px layer-blur, [N]px borderRadius, semi-transparent surface fill,
@@ -286,6 +330,7 @@ and a drop shadow. Describe the values you'll use before applying."
 ## 7. Design File Best Practices
 
 ### File & page structure
+
 - Choose one page organisation strategy:
   - **Domain-based**: e.g. `Foundations`, `Mobile`, `Desktop`
   - **Atomic-level**: e.g. `Tokens`, `Primitives`, `Components`, `Patterns`
@@ -293,35 +338,42 @@ and a drop shadow. Describe the values you'll use before applying."
 - Every board has a clear purpose and visual entry point
 
 ### Layer naming
+
 - Function-based: `background`, `icon-close`, `label-primary` ✅
 - Not appearance-based: `rectangle-23`, `blue-box` ❌
 - Hierarchy with `/`: `component/card/default`, `overlay/confirm-delete`
 
 ### Components
+
 - Naming: `mobile/card/default`, `mobile/nav-bar`
 - Register from source shapes via `createComponent([shapes])`
 - Clone source shape first if it's already placed on a page
 
 ### Spacing & layout
+
 - Base unit: 8px. All margins/paddings derived from it.
 - No invisible rectangles for spacing — use Flex/Grid layout
 
 ### Visual effects & glassmorphism
+
 - Glass recipe: `blurs: [{ type: 'layer-blur', value: 20 }]` + `borderRadius: 20` + shadow
 - Shadow color: `{ color: '#hex', opacity: 0.06 }` (not r/g/b/a)
 - Ghost border only when accessibility explicitly requires it
 
 ### Prototyping
+
 - Flow entry boards: prefix `/flows/[journey]-start`
 - Overlay boards: prefix `overlay/`
 - Create flows via `page.createFlow('name', entryBoard)` or Prototype panel
 
 ### Accessibility
+
 - WCAG AA contrast minimum for all text
 - 44px min touch target (iOS) / 48dp (Android)
 - Never use color alone to communicate status
 
 ### Handoff readiness
+
 - Component/variable names developer-readable
 - No duplicates — single source of truth
 
@@ -340,36 +392,36 @@ and a drop shadow. Describe the values you'll use before applying."
 
 **MCP/infrastructure:**
 
-| Gotcha | Mitigation |
-|--------|-----------|
-| MCP acts on focused page only | Confirm page focus before each write batch |
-| Write ops immediate — no undo via MCP | Plan + describe before applying |
-| Large batches time out silently | Max ~10 ops per call; verify after each |
-| Page switch is async | Never switch page and write in same call |
+| Gotcha                                  | Mitigation                                         |
+| --------------------------------------- | -------------------------------------------------- |
+| MCP acts on focused page only           | Confirm page focus before each write batch         |
+| Write ops immediate — no undo via MCP   | Plan + describe before applying                    |
+| Large batches time out silently         | Max ~10 ops per call; verify after each            |
+| Page switch is async                    | Never switch page and write in same call           |
 | `export_shape` may fail with HTTP error | Verify structurally via API; export is best-effort |
-| Remote MCP can't read local file system | Use local MCP for `import_image` |
-| Only one active MCP tab | Close other Penpot tabs before running agents |
-| MCP key shown only once | Copy immediately; regenerate if lost |
-| Expired key blocks all connections | Regenerate in Integrations; update all configs |
-| Chromium ≥142 blocks localhost | Use Firefox, or allow local network explicitly |
+| Remote MCP can't read local file system | Use local MCP for `import_image`                   |
+| Only one active MCP tab                 | Close other Penpot tabs before running agents      |
+| MCP key shown only once                 | Copy immediately; regenerate if lost               |
+| Expired key blocks all connections      | Regenerate in Integrations; update all configs     |
+| Chromium ≥142 blocks localhost          | Use Firefox, or allow local network explicitly     |
 
 **Penpot plugin API (full detail → `references/penpot-api-patterns.md`):**
 
-| Gotcha | Mitigation |
-|--------|-----------|
-| `shape.width` / `shape.height` READ-ONLY | Use `shape.resize(w, h)` |
-| `shape.x` / `shape.y` READ-ONLY for parented shapes | Use `penpotUtils.setParentXY(shape, x, y)` |
-| `shape.x` / `shape.y` for root-level boards | ✅ Direct assignment works |
-| `appendChild` ignores z-order | Use `insertChild(index, shape)` |
-| Flex children reversed for column dirs | Last inserted = top visually |
-| Text clips after `resize()` | Always reset `growType` after every `text.resize()` |
-| Font weight rejection | Only use weights explicitly installed for the font family |
-| Library `fontSize` must be string | `"16"` not `16`; library typographies use `fontFamilies` not `fontFamily` |
-| `LibraryColor.color` for hex | `.color = '#hex'` not `.fillColor` |
-| `shape.blurs` is an array | `shape.blurs = [{ type: 'layer-blur', value: 20 }]` |
-| Shadow color format | `{ color: '#hex', opacity: 0.15 }` not `{r,g,b,a}` |
-| Typography `fontId` stays stale | Known API limitation; rendered layers use correct ID |
-| `storage` resets on server restart | Always use `|| fallback` when reading |
-| `Page.findShapes()` takes criteria object | `page.findShapes({ type: 'board' })` not a predicate |
-| `createComponent` wraps an array | `createComponent([shape])` not `createComponent(shape)` |
-
+| Gotcha                                              | Mitigation                                                                |
+| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| `shape.width` / `shape.height` READ-ONLY            | Use `shape.resize(w, h)`                                                  |
+| `shape.x` / `shape.y` READ-ONLY for parented shapes | Use `penpotUtils.setParentXY(shape, x, y)`                                |
+| `shape.x` / `shape.y` for root-level boards         | ✅ Direct assignment works                                                |
+| `appendChild` ignores z-order                       | Use `insertChild(index, shape)`                                           |
+| Flex children reversed for column dirs              | Last inserted = top visually                                              |
+| `penpot.createText(...)` may return null            | Guard before resize/style calls; return a clear error if unavailable      |
+| Text clips after `resize()`                         | Always reset `growType` after every `text.resize()`                       |
+| Font weight rejection                               | Only use weights explicitly installed for the font family                 |
+| Library `fontSize` must be string                   | `"16"` not `16`; library typographies use `fontFamilies` not `fontFamily` |
+| `LibraryColor.color` for hex                        | `.color = '#hex'` not `.fillColor`                                        |
+| `shape.blurs` is an array                           | `shape.blurs = [{ type: 'layer-blur', value: 20 }]`                       |
+| Shadow color format                                 | `{ color: '#hex', opacity: 0.15 }` not `{r,g,b,a}`                        |
+| Typography `fontId` stays stale                     | Known API limitation; rendered layers use correct ID                      |
+| `storage` resets on server restart                  | Always use a fallback value when reading                                  |
+| `Page.findShapes()` takes criteria object           | `page.findShapes({ type: 'board' })` not a predicate                      |
+| `createComponent` wraps an array                    | `createComponent([shape])` not `createComponent(shape)`                   |

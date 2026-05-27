@@ -243,4 +243,3 @@ For the currently focused file:
 
 Output as JSON with counts and a 'sync_health' score (0-100)."
 ```
-

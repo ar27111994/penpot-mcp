@@ -355,4 +355,3 @@ return { created: screens.length };
 - `ease-out` → overlay appears quickly, feels responsive
 - `ease-in` → element leaves quickly; use for exit animations
 - `linear` → only for loading bars or mechanical animations
-
