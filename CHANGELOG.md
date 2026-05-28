@@ -8,6 +8,7 @@ All notable changes to this community skill are documented here.
 - Tightened trigger wording to focus on Penpot-agent workflows instead of any Penpot mention.
 - Clarified local `/mcp` vs `/sse` usage and the `Already connected to a transport` troubleshooting path.
 - Added an `uploadMediaUrl` trust warning for URL-based image imports.
+- Added Markdown JavaScript snippet validation for common Penpot API anti-patterns.
 
 ## 1.5.1 - 2026-05-28
 

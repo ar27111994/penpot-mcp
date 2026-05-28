@@ -78,6 +78,7 @@ board.interactions; // Interaction[]
 const board = penpot.createBoard();
 const rect = penpot.createRectangle();
 const text = penpot.createText("Hello"); // returns Text | null
+if (!text) return { error: "createText returned null" };
 const ellipse = penpot.createEllipse();
 
 // Layout on a container

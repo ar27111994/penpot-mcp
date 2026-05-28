@@ -5,9 +5,10 @@
   "scripts": {
     "lint": "eslint \"scripts/**/*.mjs\" eslint.config.mjs",
     "format:check": "prettier --check package.json package-lock.json eslint.config.mjs scripts/**/*.mjs .github/**/*.yml --end-of-line auto",
-    "validate": "node scripts/validate-package.mjs && node scripts/check-trigger-evals.mjs",
+    "validate": "node scripts/validate-package.mjs && node scripts/check-trigger-evals.mjs && node scripts/check-snippets.mjs",
     "check:whitespace": "git diff --check -- .github README.md package.json penpot-mcp scripts && git diff --cached --check -- .github README.md package.json penpot-mcp scripts",
-    "eval:triggers": "node scripts/check-trigger-evals.mjs"
+    "eval:triggers": "node scripts/check-trigger-evals.mjs",
+    "check:snippets": "node scripts/check-snippets.mjs"
   },
   "author": "ar27111994",
   "license": "MIT",
