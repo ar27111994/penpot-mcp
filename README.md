@@ -15,7 +15,7 @@ Works with any MCP-compatible client: **Claude Code**, **Cursor**, **VS Code / C
 
 ## What this skill covers
 
-- **Remote & local MCP setup** — up-to-date configs for all major MCP clients; Remote MCP recommended for most users
+- **Remote & local MCP setup** — up-to-date configs for all major MCP clients; Remote MCP recommended for most users; `/sse` fallback guidance for local transport conflicts
 - **All 5 MCP tools** — `execute_code`, `high_level_overview`, `penpot_api_info`, `export_shape`, `import_image`
 - **Penpot JS API patterns** — `penpotUtils` reference, read-only property gotchas, flex ordering quirks, board positioning, CSS export, plugin data API, community plugin boundaries
 - **Font & typography constraints** — installed variant detection, library vs. layer fontSize types, stale `fontId` limitation
@@ -72,6 +72,10 @@ Key differences:
 - ✅ **Write safety**: batch limits, page-switch two-call pattern, export reliability gotcha
 - ✅ **Prototyping workflows**: flows, overlays, multi-flow, animation guide
 - ✅ Compatible with **all MCP-compatible agents**, not just Claude Code or Cursor
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for release notes.
 
 ## Contributing
 

@@ -78,6 +78,7 @@ board.interactions; // Interaction[]
 const board = penpot.createBoard();
 const rect = penpot.createRectangle();
 const text = penpot.createText("Hello"); // returns Text | null
+if (!text) return { error: "createText returned null" };
 const ellipse = penpot.createEllipse();
 
 // Layout on a container
@@ -582,6 +583,8 @@ shape.fills = [
 ```
 
 ### Image fill (from URL)
+
+`uploadMediaUrl(name, url)` fetches from the URL via the Penpot server. Only use URLs from trusted sources — never pass user-supplied or agent-generated URLs without validation.
 
 ```javascript
 // uploadMediaUrl is async — must use await

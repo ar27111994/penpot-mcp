@@ -1,12 +1,14 @@
 {
   "name": "penpot-mcp",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "AI-agent skill for creating, auditing, and maintaining production-grade Penpot design projects, design systems, flows, interactions, animations, tokens, and visual effects via the official Penpot MCP Server.",
   "scripts": {
     "lint": "eslint \"scripts/**/*.mjs\" eslint.config.mjs",
     "format:check": "prettier --check package.json package-lock.json eslint.config.mjs scripts/**/*.mjs .github/**/*.yml --end-of-line auto",
-    "validate": "node scripts/validate-package.mjs",
-    "check:whitespace": "git diff --check -- .github README.md package.json penpot-mcp scripts && git diff --cached --check -- .github README.md package.json penpot-mcp scripts"
+    "validate": "node scripts/validate-package.mjs && node scripts/check-trigger-evals.mjs && node scripts/check-snippets.mjs",
+    "check:whitespace": "git diff --check -- .github README.md package.json penpot-mcp scripts && git diff --cached --check -- .github README.md package.json penpot-mcp scripts",
+    "eval:triggers": "node scripts/check-trigger-evals.mjs",
+    "check:snippets": "node scripts/check-snippets.mjs"
   },
   "author": "ar27111994",
   "license": "MIT",
