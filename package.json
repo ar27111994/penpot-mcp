@@ -1,6 +1,6 @@
 {
   "name": "penpot-mcp",
-  "version": "1.5.0",
+  "version": "1.5.1",
   "description": "AI-agent skill for creating, auditing, and maintaining production-grade Penpot design projects, design systems, flows, interactions, animations, tokens, and visual effects via the official Penpot MCP Server.",
   "scripts": {
     "lint": "eslint \"scripts/**/*.mjs\" eslint.config.mjs",

@@ -1,6 +1,6 @@
 import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { URL, fileURLToPath } from "node:url";
 
 const repositoryRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
@@ -14,6 +14,8 @@ const requiredReferenceFiles = [
 
 const skippedDirectories = new Set([".git", "node_modules"]);
 const textFileExtensions = new Set([".json", ".md", ".mjs", ".yml", ".yaml"]);
+const semverPattern = /^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
+const shieldsHost = ["img", "shields", "io"].join(".");
 
 /** Records a validation failure without stopping later checks. */
 function fail(message) {
@@ -80,9 +82,7 @@ function validatePackageJson() {
     fail("package.json name must be penpot-mcp");
   }
 
-  if (
-    !/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(packageJson.version || "")
-  ) {
+  if (!semverPattern.test(packageJson.version || "")) {
     fail("package.json version must be valid semver");
   }
 
@@ -97,29 +97,110 @@ function validatePackageJson() {
   return packageJson;
 }
 
+/** Extracts Markdown image URLs for alt text labels such as "Version". */
+function collectMarkdownImageUrls(markdown, altText) {
+  const imagePrefix = `![${altText}](`;
+  const urls = [];
+
+  for (const line of markdown.split(/\r?\n/)) {
+    let searchIndex = 0;
+
+    while (searchIndex < line.length) {
+      const imageStartIndex = line.indexOf(imagePrefix, searchIndex);
+      if (imageStartIndex === -1) break;
+
+      const urlStartIndex = imageStartIndex + imagePrefix.length;
+      const urlEndIndex = line.indexOf(")", urlStartIndex);
+      if (urlEndIndex === -1) break;
+
+      urls.push(line.slice(urlStartIndex, urlEndIndex).trim());
+      searchIndex = urlEndIndex + 1;
+    }
+  }
+
+  return urls;
+}
+
+/** Parses a Markdown image URL, including protocol-relative URLs. */
+function parseMarkdownImageUrl(url) {
+  if (url.startsWith("//")) return new URL(`https:${url}`);
+  return new URL(url);
+}
+
+/** Checks whether a shields.io URL is the dynamic package.json version badge. */
+function isDynamicVersionBadgeUrl(url) {
+  const parsedUrl = parseMarkdownImageUrl(url);
+
+  return (
+    ["https:", "http:"].includes(parsedUrl.protocol) &&
+    parsedUrl.hostname === shieldsHost &&
+    parsedUrl.pathname === "/github/package-json/v/ar27111994/penpot-mcp"
+  );
+}
+
+/** Reads a hardcoded shields.io version badge from a URL, if present. */
+function readHardcodedBadgeVersionFromUrl(url) {
+  const parsedUrl = parseMarkdownImageUrl(url);
+  const badgePathPrefix = "/badge/version-";
+  const badgePathSuffix = "-blue.svg";
+
+  if (
+    !["https:", "http:"].includes(parsedUrl.protocol) ||
+    parsedUrl.hostname !== shieldsHost ||
+    !parsedUrl.pathname.startsWith(badgePathPrefix) ||
+    !parsedUrl.pathname.endsWith(badgePathSuffix)
+  ) {
+    return null;
+  }
+
+  const versionStartIndex = badgePathPrefix.length;
+  const versionEndIndex = parsedUrl.pathname.length - badgePathSuffix.length;
+  if (versionStartIndex >= versionEndIndex) return null;
+
+  const version = parsedUrl.pathname
+    .slice(versionStartIndex, versionEndIndex)
+    .trim();
+  if (!semverPattern.test(version)) return null;
+
+  return version;
+}
+
 /** Ensures the README version badge cannot drift from package.json. */
 function validateReadmeVersionBadge(packageJson) {
   const readme = readRepositoryFile("README.md");
-  const dynamicBadgePattern =
-    /img\.shields\.io\/github\/package-json\/v\/ar27111994\/penpot-mcp\b/;
-  const hardcodedBadgeMatch = readme.match(
-    /img\.shields\.io\/badge\/version-([0-9A-Za-z.+-]+)-blue\.svg/,
-  );
+  const versionBadgeUrls = collectMarkdownImageUrls(readme, "Version");
 
-  if (dynamicBadgePattern.test(readme)) return;
+  for (const badgeUrl of versionBadgeUrls) {
+    try {
+      if (isDynamicVersionBadgeUrl(badgeUrl)) return;
+    } catch {
+      continue;
+    }
+  }
 
-  if (!hardcodedBadgeMatch) {
-    fail(
-      "README.md must include a version badge backed by package.json or matching package.json version",
-    );
+  for (const badgeUrl of versionBadgeUrls) {
+    let hardcodedBadgeVersion = null;
+
+    try {
+      hardcodedBadgeVersion = readHardcodedBadgeVersionFromUrl(badgeUrl);
+    } catch {
+      continue;
+    }
+
+    if (!hardcodedBadgeVersion) continue;
+
+    if (hardcodedBadgeVersion !== packageJson.version) {
+      fail(
+        `README.md version badge ${hardcodedBadgeVersion} does not match package.json ${packageJson.version}`,
+      );
+    }
+
     return;
   }
 
-  if (hardcodedBadgeMatch[1] !== packageJson.version) {
-    fail(
-      `README.md version badge ${hardcodedBadgeMatch[1]} does not match package.json ${packageJson.version}`,
-    );
-  }
+  fail(
+    "README.md must include a version badge backed by package.json or matching package.json version",
+  );
 }
 
 /** Validates the skill discovery frontmatter required by agent clients. */
