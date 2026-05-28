@@ -255,7 +255,7 @@ function validateSkillFrontmatter(packageJson) {
 function validateRequiredFiles() {
   for (const filePath of [...requiredReferenceFiles, ...requiredPackageFiles]) {
     if (!existsSync(repositoryPath(filePath))) {
-      fail(`Required package file is missing: ${filePath}`);
+      fail(`Required file is missing: ${filePath}`);
     }
   }
 }

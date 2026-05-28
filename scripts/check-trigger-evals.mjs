@@ -5,14 +5,17 @@ import { fileURLToPath } from "node:url";
 const repositoryRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
 const failures = [];
 
+/** Records a validation failure without stopping later checks. */
 function fail(message) {
   failures.push(message);
 }
 
+/** Reads a UTF-8 file from a repository-relative path. */
 function readRepositoryFile(filePath) {
   return readFileSync(join(repositoryRoot, filePath), "utf8");
 }
 
+/** Reads and parses a JSON file from the repository. */
 function readJson(filePath) {
   try {
     return JSON.parse(readRepositoryFile(filePath));
@@ -22,6 +25,7 @@ function readJson(filePath) {
   }
 }
 
+/** Extracts the folded frontmatter description from SKILL.md. */
 function collectFrontmatterDescription(skill) {
   const match = skill.match(/^---\r?\n([\s\S]*?)\r?\n---/);
   if (!match) return "";
@@ -47,17 +51,22 @@ function collectFrontmatterDescription(skill) {
   return descriptionLines.join(" ").toLowerCase();
 }
 
+/** Validates trigger eval examples and the SKILL.md trigger description. */
 function validateTriggerEvals() {
   const evals = readJson("evals/trigger-tests.json");
   if (!evals) return;
 
+  let hasInvalidSection = false;
   for (const section of ["positive", "negative"]) {
     if (!Array.isArray(evals[section]) || evals[section].length === 0) {
       fail(
         `evals/trigger-tests.json must include a non-empty ${section} array`,
       );
+      hasInvalidSection = true;
     }
   }
+
+  if (hasInvalidSection) return;
 
   const description = collectFrontmatterDescription(
     readRepositoryFile("penpot-mcp/SKILL.md"),
