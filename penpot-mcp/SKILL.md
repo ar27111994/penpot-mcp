@@ -1,15 +1,19 @@
 ---
 name: penpot-mcp
+version: "1.5.2"
+category: design
+tags: [penpot, mcp, design-system, prototyping, design-to-code, tokens, interactions]
+compatibility: claude-code, cursor, codex, windsurf, cline, amp
 description: >
   Use this skill whenever the user wants to use AI agents to work with Penpot design files via
-  the Penpot MCP Server. Triggers include: any mention of Penpot, design files, design systems,
-  design tokens, Penpot MCP, design-to-code, generating UI from design, auditing a design system,
-  creating components/variants, renaming layers, exporting assets from Penpot, adding flows,
-  interactions, animations, overlays, or prototyping in Penpot, or prompting an AI agent to
-  read/modify a Penpot file. Also triggers when the user wants to set up Penpot MCP, connect
-  any MCP-compatible AI agent or IDE to Penpot, or produce production-ready HTML/CSS/React from
-  a Penpot design. Use this skill for ALL Penpot-agent workflows — design, code, audit,
-  prototyping, or setup.
+  the Penpot MCP Server. Triggers include: using Penpot through an AI agent, design files,
+  design systems, design tokens, Penpot MCP, design-to-code, generating UI from design,
+  auditing a design system, creating components/variants, renaming layers, exporting assets
+  from Penpot, adding flows, interactions, animations, overlays, or prototyping in Penpot,
+  or prompting an AI agent to read/modify a Penpot file. Also triggers when the user wants
+  to set up Penpot MCP, connect any MCP-compatible AI agent or IDE to Penpot, or produce
+  production-ready HTML/CSS/React from a Penpot design. Use this skill for Penpot-agent
+  workflows — design, code, audit, prototyping, or setup.
 ---
 
 # Penpot MCP Skill
@@ -57,8 +61,8 @@ npx @penpot/mcp@beta     # for beta/test environments
 
 - Load plugin: **Plugins → Load from URL** → `http://localhost:4400/manifest.json`
 - Click **Connect to MCP server** in plugin UI → keep plugin window open at all times
-- Client URL: `http://localhost:4401/mcp` (no auth)
-- Legacy SSE fallback: `http://localhost:4401/sse`
+- Client URL: `http://localhost:4401/mcp` (no auth; preferred for single-client setups)
+- SSE fallback: `http://localhost:4401/sse` (use when `/mcp` transport conflicts occur, or with `mcp-remote` for stdio-only clients)
 
 ### Client Config Snippets
 
@@ -101,7 +105,7 @@ npx @penpot/mcp@beta     # for beta/test environments
 **Claude Desktop** (stdio-only — requires proxy):
 
 ```bash
-npx -y mcp-remote http://localhost:4401/mcp --allow-http
+npx -y mcp-remote http://localhost:4401/sse --allow-http
 ```
 
 ### Troubleshooting Checklist
@@ -109,6 +113,7 @@ npx -y mcp-remote http://localhost:4401/mcp --allow-http
 - Restart MCP server process
 - Reconnect plugin (**File → MCP Server → Connect**)
 - Restart MCP client / reload tools
+- `Error: Already connected to a transport` → close other MCP clients; use `/sse` fallback if `/mcp` conflicts
 - Keep plugin window open while agents run at all times
 - Firefox preferred if Chromium blocks `localhost` from `https://design.penpot.app`
 - Expired MCP key → regenerate in Penpot → Integrations; update all client configs
@@ -403,18 +408,19 @@ and a drop shadow. Describe the values you'll use before applying."
 
 **MCP/infrastructure:**
 
-| Gotcha                                  | Mitigation                                         |
-| --------------------------------------- | -------------------------------------------------- |
-| MCP acts on focused page only           | Confirm page focus before each write batch         |
-| Write ops immediate — no undo via MCP   | Plan + describe before applying                    |
-| Large batches time out silently         | Max ~10 ops per call; verify after each            |
-| Page switch is async                    | Never switch page and write in same call           |
-| `export_shape` may fail with HTTP error | Verify structurally via API; export is best-effort |
-| Remote MCP can't read local file system | Use local MCP for `import_image`                   |
-| Only one active MCP tab                 | Close other Penpot tabs before running agents      |
-| MCP key shown only once                 | Copy immediately; regenerate if lost               |
-| Expired key blocks all connections      | Regenerate in Integrations; update all configs     |
-| Chromium ≥142 blocks localhost          | Use Firefox, or allow local network explicitly     |
+| Gotcha                                    | Mitigation                                                     |
+| ----------------------------------------- | -------------------------------------------------------------- |
+| MCP acts on focused page only             | Confirm page focus before each write batch                     |
+| Write ops immediate — no undo via MCP     | Plan + describe before applying                                |
+| Large batches time out silently           | Max ~10 ops per call; verify after each                        |
+| Page switch is async                      | Never switch page and write in same call                       |
+| `export_shape` may fail with HTTP error   | Verify structurally via API; export is best-effort             |
+| Remote MCP can't read local file system   | Use local MCP for `import_image`                               |
+| Only one active MCP tab                   | Close other Penpot tabs before running agents                  |
+| `Error: Already connected to a transport` | Close other MCP clients; use `/sse` fallback if `/mcp` conflicts |
+| MCP key shown only once                   | Copy immediately; regenerate if lost                           |
+| Expired key blocks all connections        | Regenerate in Integrations; update all configs                 |
+| Chromium ≥142 blocks localhost            | Use Firefox, or allow local network explicitly                 |
 
 **Penpot plugin API (full detail → `references/penpot-api-patterns.md`):**
 

@@ -583,6 +583,8 @@ shape.fills = [
 
 ### Image fill (from URL)
 
+`uploadMediaUrl(name, url)` fetches from the URL via the Penpot server. Only use URLs from trusted sources — never pass user-supplied or agent-generated URLs without validation.
+
 ```javascript
 // uploadMediaUrl is async — must use await
 const imageData = await penpot.uploadMediaUrl(

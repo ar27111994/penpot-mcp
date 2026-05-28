@@ -1,0 +1,14 @@
+{
+  "positive": [
+    "Set up Penpot MCP in VS Code for this design file.",
+    "Use Penpot MCP to audit the design tokens in my file.",
+    "Create prototype interactions and overlays in Penpot with an AI agent.",
+    "Export assets from a Penpot design and map them to React components."
+  ],
+  "negative": [
+    "What is Penpot?",
+    "Compare Penpot and Figma at a high level.",
+    "Write a blog intro about open-source design tools.",
+    "Summarize the history of vector graphics editors."
+  ]
+}

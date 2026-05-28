@@ -11,6 +11,7 @@ const requiredReferenceFiles = [
   "penpot-mcp/references/design-to-code-workflows.md",
   "penpot-mcp/references/prototyping-workflows.md",
 ];
+const requiredPackageFiles = ["CHANGELOG.md", "evals/trigger-tests.json"];
 
 const skippedDirectories = new Set([".git", "node_modules"]);
 const textFileExtensions = new Set([".json", ".md", ".mjs", ".yml", ".yaml"]);
@@ -204,7 +205,7 @@ function validateReadmeVersionBadge(packageJson) {
 }
 
 /** Validates the skill discovery frontmatter required by agent clients. */
-function validateSkillFrontmatter() {
+function validateSkillFrontmatter(packageJson) {
   const skill = readRepositoryFile("penpot-mcp/SKILL.md");
   const frontmatterMatch = skill.match(/^---\r?\n([\s\S]*?)\r?\n---/);
 
@@ -215,10 +216,34 @@ function validateSkillFrontmatter() {
 
   const frontmatter = frontmatterMatch[1];
   const name = readFrontmatterValue(frontmatter, "name");
+  const version = readFrontmatterValue(frontmatter, "version");
+  const category = readFrontmatterValue(frontmatter, "category");
+  const tags = readFrontmatterValue(frontmatter, "tags");
+  const compatibility = readFrontmatterValue(frontmatter, "compatibility");
   const description = readFrontmatterValue(frontmatter, "description");
 
   if (name !== "penpot-mcp") {
     fail("penpot-mcp/SKILL.md frontmatter name must be penpot-mcp");
+  }
+
+  if (!version || !semverPattern.test(version)) {
+    fail("penpot-mcp/SKILL.md frontmatter version must be valid semver");
+  } else if (packageJson && version !== packageJson.version) {
+    fail(
+      `penpot-mcp/SKILL.md frontmatter version ${version} does not match package.json ${packageJson.version}`,
+    );
+  }
+
+  if (category !== "design") {
+    fail("penpot-mcp/SKILL.md frontmatter category must be design");
+  }
+
+  if (!tags.startsWith("[") || !tags.endsWith("]")) {
+    fail("penpot-mcp/SKILL.md frontmatter tags must be an inline YAML list");
+  }
+
+  if (!compatibility) {
+    fail("penpot-mcp/SKILL.md frontmatter compatibility is required");
   }
 
   if (!description) {
@@ -226,11 +251,11 @@ function validateSkillFrontmatter() {
   }
 }
 
-/** Ensures all reference files advertised by the package exist. */
-function validateRequiredReferences() {
-  for (const filePath of requiredReferenceFiles) {
+/** Ensures all files advertised by the package exist. */
+function validateRequiredFiles() {
+  for (const filePath of [...requiredReferenceFiles, ...requiredPackageFiles]) {
     if (!existsSync(repositoryPath(filePath))) {
-      fail(`Required reference file is missing: ${filePath}`);
+      fail(`Required package file is missing: ${filePath}`);
     }
   }
 }
@@ -381,8 +406,8 @@ function validateTrailingWhitespace(filePath) {
 
 const packageJson = validatePackageJson();
 if (packageJson) validateReadmeVersionBadge(packageJson);
-validateSkillFrontmatter();
-validateRequiredReferences();
+validateSkillFrontmatter(packageJson);
+validateRequiredFiles();
 
 for (const filePath of collectTextFiles()) {
   validateTrailingWhitespace(filePath);
