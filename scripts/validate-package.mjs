@@ -97,27 +97,47 @@ function validatePackageJson() {
   return packageJson;
 }
 
+/** Reads a hardcoded shields.io version badge from README content, if present. */
+function readHardcodedReadmeBadgeVersion(readme) {
+  const badgePrefix = "https://img.shields.io/badge/version-";
+  const badgeSuffix = "-blue.svg";
+
+  for (const line of readme.split(/\r?\n/)) {
+    const startIndex = line.indexOf(badgePrefix);
+    if (startIndex === -1) continue;
+
+    const versionStartIndex = startIndex + badgePrefix.length;
+    const versionEndIndex = line.indexOf(badgeSuffix, versionStartIndex);
+    if (versionEndIndex === -1) continue;
+
+    return line.slice(versionStartIndex, versionEndIndex);
+  }
+
+  return null;
+}
+
 /** Ensures the README version badge cannot drift from package.json. */
 function validateReadmeVersionBadge(packageJson) {
   const readme = readRepositoryFile("README.md");
-  const dynamicBadgePattern =
-    /img\.shields\.io\/github\/package-json\/v\/ar27111994\/penpot-mcp\b/;
-  const hardcodedBadgeMatch = readme.match(
-    /img\.shields\.io\/badge\/version-([0-9A-Za-z.+-]+)-blue\.svg/,
-  );
+  const dynamicBadgeUrl =
+    "https://img.shields.io/github/package-json/v/ar27111994/penpot-mcp";
+  const hasDynamicBadge = readme
+    .split(/\r?\n/)
+    .some((line) => line.includes(dynamicBadgeUrl));
 
-  if (dynamicBadgePattern.test(readme)) return;
+  if (hasDynamicBadge) return;
 
-  if (!hardcodedBadgeMatch) {
+  const hardcodedBadgeVersion = readHardcodedReadmeBadgeVersion(readme);
+  if (!hardcodedBadgeVersion) {
     fail(
       "README.md must include a version badge backed by package.json or matching package.json version",
     );
     return;
   }
 
-  if (hardcodedBadgeMatch[1] !== packageJson.version) {
+  if (hardcodedBadgeVersion !== packageJson.version) {
     fail(
-      `README.md version badge ${hardcodedBadgeMatch[1]} does not match package.json ${packageJson.version}`,
+      `README.md version badge ${hardcodedBadgeVersion} does not match package.json ${packageJson.version}`,
     );
   }
 }
