@@ -3,7 +3,7 @@ name: penpot-mcp
 version: "1.5.2"
 category: design
 tags: [penpot, mcp, design-system, prototyping, design-to-code, tokens, interactions]
-compatibility: claude-code, cursor, codex, windsurf, cline, amp
+compatibility: claude-code, cursor, vscode, copilot, codex, windsurf, cline, amp, claude-desktop
 description: >
   Use this skill whenever the user wants to use AI agents to work with Penpot design files via
   the Penpot MCP Server. Triggers include: using Penpot through an AI agent, design files,

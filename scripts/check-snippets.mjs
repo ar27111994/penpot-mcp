@@ -17,9 +17,24 @@ function fail(message) {
   failures.push(message);
 }
 
-/** Reads a UTF-8 file from a repository-relative path. */
+/** Reads a UTF-8 Markdown file from a repository-relative path. */
 function readRepositoryFile(filePath) {
-  return readFileSync(join(repositoryRoot, filePath), "utf8");
+  try {
+    return readFileSync(join(repositoryRoot, filePath), "utf8");
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      fail(`Missing markdown file: ${filePath}`);
+    } else {
+      fail(`Could not read markdown file ${filePath}: ${error.message}`);
+    }
+
+    return null;
+  }
+}
+
+/** Escapes user-provided text for literal use inside a RegExp. */
+function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 /** Extracts fenced JavaScript code blocks with starting line numbers. */
@@ -53,21 +68,55 @@ function collectJavaScriptBlocks(markdown) {
   return blocks;
 }
 
+/** Removes a line comment while preserving // inside strings such as URLs. */
+function stripLineComment(line) {
+  let quote = null;
+  let escaped = false;
+
+  for (let index = 0; index < line.length - 1; index += 1) {
+    const character = line[index];
+    const nextCharacter = line[index + 1];
+
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+
+    if (quote && character === "\\") {
+      escaped = true;
+      continue;
+    }
+
+    if (quote) {
+      if (character === quote) quote = null;
+      continue;
+    }
+
+    if (["'", '"', "`"].includes(character)) {
+      quote = character;
+      continue;
+    }
+
+    if (character === "/" && nextCharacter === "/") {
+      return line.slice(0, index);
+    }
+  }
+
+  return line;
+}
+
 /** Removes comments to reduce false positives in executable checks. */
 function stripComments(code) {
   return code
     .replace(/\/\*[\s\S]*?\*\//g, "")
     .split(/\r?\n/)
-    .map((line) => line.replace(/\/\/.*$/g, ""))
+    .map(stripLineComment)
     .join("\n");
 }
 
 /** Returns snippet lines that are not explicitly marked as bad examples. */
 function executableExampleLines(block) {
-  return block.code
-    .split(/\r?\n/)
-    .filter((line) => !line.includes("❌"))
-    .map((line) => line.replace(/\/\/.*$/g, ""));
+  return block.code.split(/\r?\n/).filter((line) => !line.includes("❌"));
 }
 
 /** Finds variables assigned from penpot.createText(...). */
@@ -77,10 +126,40 @@ function collectCreatedTextVariables(code) {
     /(?:const|let|var)\s+(\w+)\s*=\s*penpot\.createText\s*\(/g;
 
   for (const match of code.matchAll(createTextPattern)) {
-    textVariables.push(match[1]);
+    textVariables.push({
+      name: match[1],
+      declarationIndex: match.index,
+      afterDeclarationIndex: match.index + match[0].length,
+    });
   }
 
   return textVariables;
+}
+
+/** Finds the first match index for a pattern at or after startIndex. */
+function findMatchIndex(code, pattern, startIndex = 0) {
+  const match = pattern.exec(code.slice(startIndex));
+  return match ? startIndex + match.index : -1;
+}
+
+/** Finds the first recognized null guard for a variable after declaration. */
+function findNullGuardIndex(code, variableName, startIndex) {
+  const escapedName = escapeRegExp(variableName);
+  const guardPatterns = [
+    new RegExp(`if\\s*\\(\\s*!${escapedName}\\s*\\)`),
+    new RegExp(
+      `if\\s*\\(\\s*${escapedName}\\s*(?:==|===)\\s*(?:null|undefined)\\s*\\)`,
+    ),
+    new RegExp(
+      `if\\s*\\(\\s*(?:null|undefined)\\s*(?:==|===)\\s*${escapedName}\\s*\\)`,
+    ),
+  ];
+
+  const guardIndexes = guardPatterns
+    .map((pattern) => findMatchIndex(code, pattern, startIndex))
+    .filter((index) => index !== -1);
+
+  return guardIndexes.length === 0 ? -1 : Math.min(...guardIndexes);
 }
 
 /** Validates one JavaScript snippet for known Penpot API anti-patterns. */
@@ -102,18 +181,39 @@ function validateSnippet(filePath, block) {
   }
 
   const textVariables = collectCreatedTextVariables(executableCode);
-  for (const variableName of textVariables) {
-    const nullGuardPattern = new RegExp(`if\\s*\\(\\s*!${variableName}\\s*\\)`);
-    if (!nullGuardPattern.test(executableCode)) {
+  for (const textVariable of textVariables) {
+    const variableName = textVariable.name;
+    const escapedName = escapeRegExp(variableName);
+    const firstUseIndex = findMatchIndex(
+      executableCode,
+      new RegExp(`\\b${escapedName}\\s*\\.`),
+      textVariable.afterDeclarationIndex,
+    );
+    const nullGuardIndex = findNullGuardIndex(
+      executableCode,
+      variableName,
+      textVariable.afterDeclarationIndex,
+    );
+
+    if (nullGuardIndex === -1) {
       fail(`${location} calls penpot.createText(...) without a null guard`);
+    } else if (firstUseIndex !== -1 && nullGuardIndex > firstUseIndex) {
+      fail(`${location} uses ${variableName} before its null guard`);
     }
 
-    const textResizePattern = new RegExp(`\\b${variableName}\\.resize\\s*\\(`);
-    const growTypePattern = new RegExp(`\\b${variableName}\\.growType\\s*=`);
-    if (
-      textResizePattern.test(executableCode) &&
-      !growTypePattern.test(executableCode)
-    ) {
+    const textResizeIndex = findMatchIndex(
+      executableCode,
+      new RegExp(`\\b${escapedName}\\.resize\\s*\\(`),
+      textVariable.afterDeclarationIndex,
+    );
+    if (textResizeIndex === -1) continue;
+
+    const growTypeIndex = findMatchIndex(
+      executableCode,
+      new RegExp(`\\b${escapedName}\\.growType\\s*=`),
+      textResizeIndex,
+    );
+    if (growTypeIndex === -1) {
       fail(`${location} resizes ${variableName} without resetting growType`);
     }
   }
@@ -121,6 +221,8 @@ function validateSnippet(filePath, block) {
 
 for (const filePath of markdownFiles) {
   const markdown = readRepositoryFile(filePath);
+  if (markdown === null) continue;
+
   for (const block of collectJavaScriptBlocks(markdown)) {
     validateSnippet(filePath, block);
   }
