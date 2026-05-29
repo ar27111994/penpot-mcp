@@ -22,3 +22,11 @@ All notable changes to this community skill are documented here.
 ## 1.5.0 - 2026-05-28
 
 - Added public repository maintenance files, security reporting guidance, validation CI, CodeQL, Dependabot, and package validation improvements.
+
+## 1.0.0–1.4.2 - 2026-05-24 to 2026-05-27
+
+- Initial release and iterative development of the Penpot MCP skill,
+  including MCP setup, JS API patterns, design system workflows,
+  design-to-code workflows, prototyping workflows, Token API, visual
+  effects, page management, storage global, idempotency helpers,
+  and Penpot community submission.
