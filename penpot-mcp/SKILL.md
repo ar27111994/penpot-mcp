@@ -1,6 +1,6 @@
 ---
 name: penpot-mcp
-version: "1.5.2"
+version: "1.5.3"
 category: design
 tags: [penpot, mcp, design-system, prototyping, design-to-code, tokens, interactions]
 compatibility: claude-code, cursor, vscode, copilot, codex, windsurf, cline, amp, claude-desktop

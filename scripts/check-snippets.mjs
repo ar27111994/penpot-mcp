@@ -170,13 +170,22 @@ function validateSnippet(filePath, block) {
   const location = `${filePath}:${block.startLine}`;
 
   if (
-    /\b\w+\.width\s*=/.test(executableCode) ||
-    /\b\w+\.height\s*=/.test(executableCode)
+    /\b\w+\.width\s*=(?!=)/.test(executableCode) ||
+    /\b\w+\.height\s*=(?!=)/.test(executableCode)
   ) {
     fail(`${location} assigns width/height directly; use resize(w, h)`);
   }
 
-  if (/\b\w+\.fillColor\s*=/.test(executableCode)) {
+  if (
+    /\b\w+\.parentX\s*=(?!=)/.test(executableCode) ||
+    /\b\w+\.parentY\s*=(?!=)/.test(executableCode)
+  ) {
+    fail(
+      `${location} assigns parentX/parentY directly; use penpotUtils.setParentXY(shape, x, y)`,
+    );
+  }
+
+  if (/\b\w+\.fillColor\s*=(?!=)/.test(executableCode)) {
     fail(`${location} assigns fillColor directly; library colors use .color`);
   }
 
