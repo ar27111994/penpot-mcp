@@ -2,6 +2,11 @@
 
 All notable changes to this community skill are documented here.
 
+## 1.5.3 - 2026-05-29
+
+- Added snippet validation for direct `parentX` / `parentY` assignments and now require `penpotUtils.setParentXY(shape, x, y)`.
+- Expanded positive trigger eval coverage for HTML/CSS generation, flow animations, and design-system setup prompts.
+
 ## 1.5.2 - 2026-05-28
 
 - Added skill frontmatter metadata for version, category, tags, and compatibility.
