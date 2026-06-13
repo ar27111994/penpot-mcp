@@ -1,17 +1,28 @@
 {
   "positive": [
     "Set up Penpot MCP in VS Code for this design file.",
+    "Troubleshoot a failed Penpot MCP remote connection in Cursor.",
     "Use Penpot MCP to audit the design tokens in my file.",
+    "Audit a Penpot design system for missing component states and token drift.",
     "Create prototype interactions and overlays in Penpot with an AI agent.",
+    "Build a Penpot prototype flow with modal overlays, drawers, and back navigation.",
     "Export assets from a Penpot design and map them to React components.",
     "Generate HTML and CSS from this Penpot frame using an AI agent.",
+    "Use Penpot MCP to extract design tokens and map a screen to reusable components.",
     "Wire up flow animations and transitions between boards in Penpot.",
-    "Build a design system from scratch in Penpot via MCP."
+    "Build a design system from scratch in Penpot via MCP.",
+    "Inspect my Penpot file before planning safe updates through MCP."
   ],
   "negative": [
     "What is Penpot?",
     "Compare Penpot and Figma at a high level.",
+    "How do I create a Penpot account?",
+    "List open-source alternatives to Penpot.",
     "Write a blog intro about open-source design tools.",
-    "Summarize the history of vector graphics editors."
+    "Summarize the history of vector graphics editors.",
+    "Explain what a design system is.",
+    "Suggest a color palette for a productivity dashboard.",
+    "What are modal overlays in product design?",
+    "Explain MCP at a high level without using any tools."
   ]
 }
