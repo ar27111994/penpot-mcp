@@ -169,11 +169,15 @@ Before any setup steps, **call `penpot_api_info` or `high_level_overview` first*
 **Page switching — mandatory two-call pattern:**
 
 ```text
-Call N:   penpot.openPage(page)    ← switch page
-Call N+1: write/read on that page  ← write after switch
+Call N:   penpot.openPage(page)    ← switch page (currentPage still reports OLD page)
+Call N+1: any operation            ← now on new page; currentPage updated
 ```
 
-Page switching is asynchronous in the plugin bridge. Writing in the same call as `openPage` applies changes to the _previously_ active page. Exception: calling `openPage` at the top of a call then immediately reading (not writing) can be reliable.
+**CRITICAL:** `penpot.currentPage` does NOT update until the next tool call after `openPage()`. Writing shapes in the same call as `openPage()` silently applies them to the **previously** active page.
+
+**`remove()` is unreliable across calls** — Boards deleted via `shape.remove()` may reappear in subsequent structural queries (`getPages()` → `shapeStructure()`). The remove appears to succeed in the current call, but stale boards from previous sessions can reappear when the page structure is re-read.
+
+**Always verify the page before writing:** after `openPage()`, always make a lightweight read-only call first (e.g. return `penpot.currentPage?.name`) before creating any shapes.
 
 **Use `storage` for large workflows:**
 
