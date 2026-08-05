@@ -138,6 +138,9 @@ shape.hidden = false;
 ```javascript
 const clone = shape.clone(); // clones to same parent
 shape.remove(); // removes shape from current page
+// ⚠️ remove() is unreliable across MCP calls (see SKILL.md §3): removed shapes
+// can reappear in later structural reads. Treat cleanup as best-effort and
+// verify structurally in a subsequent call before relying on it.
 interaction.remove(); // removes specific interaction
 ```
 
@@ -187,7 +190,7 @@ Safe coordination pattern:
 | `penpot.createText(...)`                    | ⚠️ Nullable               | Check result before resize/style calls             |
 | Text clips after `resize()`                 | ⚠️ Reset required         | Set `growType` after every `text.resize()`         |
 | Flex children order                         | ⚠️ Reversed               | For column: last inserted = visually top           |
-| Page switch + write in same call            | ❌ Writes to wrong page   | Two calls: switch page, then write                 |
+| Page switch + write in same call        | ❌ Writes to wrong page (≤ 2.16.x only) | Two calls: switch page, then write — fixed in Penpot 2.17.0 ([#10078](https://github.com/penpot/penpot/issues/10078)); two-call pattern still a safe defensive habit |
 | Large batch writes                          | ⚠️ Silent timeout/partial | Max ~10 ops per call; verify after                 |
 | `export_shape` HTTP error                   | ⚠️ Unreliable             | Verify structurally; don't rely on export          |
 | Library `fontSize`                          | ⚠️ Must be string         | `"16"` not `16` for library typographies           |
@@ -266,7 +269,11 @@ newPage.name = "Foundations";
 // Navigate to a page — SEPARATE CALL from writes that follow
 penpot.openPage(page); // pass Page object
 penpot.openPage(page.id); // or page id string
-// After openPage, penpot.root and penpot.currentPage reflect the new page
+// After openPage, penpot.root reflects the new page. penpot.currentPage ALSO
+// updates immediately on Penpot ≥ 2.17.0, but stays stale until the NEXT call
+// on Penpot ≤ 2.16.x (plugin-bridge bug, fixed upstream in 2.17.0 — #10078).
+// Prefer using the page handle directly instead of re-reading currentPage in
+// the same call. See SKILL.md §3 "Page switching" for the full guidance.
 ```
 
 ### Move shapes between pages
@@ -275,6 +282,9 @@ penpot.openPage(page.id); // or page id string
 // Access root of any page and append to it
 const targetPage = penpotUtils.getPageByName("Mobile");
 targetPage.root.appendChild(board); // moves board to that page's root
+// ⚠️ On Penpot ≤ 2.16.x, cross-page appendChild silently no-ops (same bug as
+// #10078, fixed in 2.17.0). On those versions, navigate with openPage() first
+// (separate call) and append on the then-current page root instead.
 ```
 
 ### idempotent ensurePage helper
@@ -284,7 +294,10 @@ function ensurePage(name) {
   const existing = penpotUtils.getPageByName(name);
   if (existing) {
     penpot.openPage(existing);
-    return penpot.currentPage;
+    // Return the handle we already hold — re-reading penpot.currentPage in the
+    // same call returns the PREVIOUS page on Penpot ≤ 2.16.x (fixed in 2.17.0,
+    // #10078). Navigation and writes still belong in separate calls.
+    return existing;
   }
   const page = penpot.createPage();
   page.name = name;
@@ -772,7 +785,10 @@ function ensurePage(name) {
   const existing = penpotUtils.getPageByName(name);
   if (existing) {
     penpot.openPage(existing);
-    return penpot.currentPage;
+    // Return the handle we already hold — re-reading penpot.currentPage in the
+    // same call returns the PREVIOUS page on Penpot ≤ 2.16.x (fixed in 2.17.0,
+    // #10078). Navigation and writes still belong in separate calls.
+    return existing;
   }
   const page = penpot.createPage();
   page.name = name;
@@ -796,13 +812,16 @@ function ensureBoard(name, x, y, w, h, fill = "#F5F5F5") {
 }
 
 // Clear boards by name prefix (useful for re-runs)
+// ⚠️ Best-effort only: remove() is unreliable across MCP calls (see SKILL.md §3).
+// Deleted boards can reappear in later structural reads, so always re-read the
+// structure in a SEPARATE call and confirm the remaining count before proceeding.
 function clearBoards(prefix) {
-  penpotUtils
-    .findShapes(
-      (s) => s.type === "board" && s.name.startsWith(prefix),
-      penpot.root,
-    )
-    .forEach((s) => s.remove());
+  const matches = penpotUtils.findShapes(
+    (s) => s.type === "board" && s.name.startsWith(prefix),
+    penpot.root,
+  );
+  matches.forEach((s) => s.remove());
+  return matches.length; // removed in THIS call only — verify in a later call
 }
 ```
 
