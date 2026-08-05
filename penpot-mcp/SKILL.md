@@ -166,14 +166,18 @@ Before any setup steps, **call `penpot_api_info` or `high_level_overview` first*
 - Pause and verify between batches
 - Never "build everything" in one call — MCP writes time out on large batches, leaving partial updates with no error indication
 
-**Page switching — mandatory two-call pattern:**
+**Page switching — two-call pattern (mandatory on Penpot ≤ 2.16.x, defensive habit on 2.17+):**
 
 ```text
-Call N:   penpot.openPage(page)    ← switch page
-Call N+1: write/read on that page  ← write after switch
+Call N:   penpot.openPage(page)    ← switch page (currentPage still reports OLD page on ≤ 2.16)
+Call N+1: any operation            ← now on new page; currentPage updated
 ```
 
-Page switching is asynchronous in the plugin bridge. Writing in the same call as `openPage` applies changes to the _previously_ active page. Exception: calling `openPage` at the top of a call then immediately reading (not writing) can be reliable.
+**⚠️ Penpot ≤ 2.16.x only — fixed upstream in 2.17.0 ([#10078](https://github.com/penpot/penpot/issues/10078)):** `penpot.currentPage` does NOT update until the next tool call after `openPage()`. Writing shapes in the same call as `openPage()` silently applies them to the **previously** active page. This is a plugin-bridge bug, not a permanent API contract. On Penpot ≥ 2.17.0, `currentPage` updates immediately after `openPage()` and the two-call pattern is unnecessary — keep it anyway as a harmless defensive habit.
+
+**`remove()` is unreliable across calls** — Boards deleted via `shape.remove()` may reappear in subsequent structural queries (`getPages()` → `shapeStructure()`). The remove appears to succeed in the current call, but stale boards from previous sessions can reappear when the page structure is re-read. (No upstream fix published through 2.18.0 — treat cleanup as best-effort and always verify structurally in a later call.)
+
+**Always verify the page before writing:** after `openPage()`, always make a lightweight read-only call first (e.g. return `penpot.currentPage?.name`) before creating any shapes.
 
 **Use `storage` for large workflows:**
 
