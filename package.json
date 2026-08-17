@@ -45,7 +45,7 @@
     "url": "https://github.com/ar27111994/penpot-mcp/issues"
   },
   "devDependencies": {
-    "eslint": "^10.8.0",
+    "eslint": "^10.8.1",
     "prettier": "^3.9.6"
   }
 }
