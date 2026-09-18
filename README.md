@@ -15,7 +15,7 @@ Works with any MCP-compatible client: **Claude Code**, **Cursor**, **VS Code / C
 
 ## What this skill covers
 
-- **Remote & local MCP setup** — up-to-date configs for all major MCP clients; Remote MCP recommended for most users; `/sse` fallback guidance for local transport conflicts
+- **Remote, self-hosted & local MCP setup** — up-to-date configs for all major MCP clients; Remote MCP recommended for most users; self-hosted Docker (Penpot 2.17+) reached at `/mcp/stream` behind the frontend; `/sse` fallback guidance for local transport conflicts
 - **All 5 MCP tools** — `execute_code`, `high_level_overview`, `penpot_api_info`, `export_shape`, `import_image`
 - **Penpot JS API patterns** — `penpotUtils` reference, read-only property gotchas, flex ordering quirks, board positioning, CSS export, plugin data API, community plugin boundaries
 - **Font & typography constraints** — installed variant detection, library vs. layer fontSize types, stale `fontId` limitation
@@ -64,7 +64,7 @@ Built directly from the [official Penpot MCP documentation](https://help.penpot.
 
 Key differences:
 
-- ✅ Covers **Remote MCP** and all major MCP client configs (Cursor, Claude Code, VS Code, Codex, Claude Desktop)
+- ✅ Covers **Remote, self-hosted Docker and local MCP** and all major MCP client configs (Cursor, Claude Code, VS Code, Codex, Claude Desktop)
 - ✅ `npx @penpot/mcp@stable` — not the outdated `git clone` approach
 - ✅ Correct VS Code config key (`mcp.servers`, not `mcpServers`)
 - ✅ Full **interactions & animations** API (`addInteraction`, all triggers/actions/animations)

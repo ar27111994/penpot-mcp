@@ -64,6 +64,24 @@ npx @penpot/mcp@beta     # for beta/test environments
 - Client URL: `http://localhost:4401/mcp` (no auth; preferred for single-client setups)
 - SSE fallback: `http://localhost:4401/sse` (use when `/mcp` transport conflicts occur, or with `mcp-remote` for stdio-only clients)
 
+### Self-hosted Penpot (Docker, 2.17+)
+
+Since Penpot 2.17 the MCP server is its own container in the official `docker/images/docker-compose.yaml`:
+
+```yaml
+penpot-mcp:
+  image: "penpotapp/mcp:${PENPOT_VERSION}"
+  restart: always
+  networks:
+    - penpot
+```
+
+- `enable-mcp` ships in the default `PENPOT_FLAGS`, and the frontend declares `depends_on: penpot-mcp`. Its nginx proxies `/mcp` to that container, so the frontend will not come up while the upstream is missing.
+- The container publishes **no port** — reach it through the frontend: `<PENPOT_PUBLIC_URI>/mcp/stream`, which is `http://localhost:9001/mcp/stream` with the stock compose file. `/mcp/sse` and `/mcp/ws` are served next to it.
+- Use the client config snippets below unchanged; a local instance connects without the `?userToken=` parameter the remote URL needs.
+- **Upgrading an older self-hosted stack:** copy the `penpot-mcp` service into your compose file. Neither `npx @penpot/mcp` nor the old `localhost:4401` endpoint serves this setup.
+- Like Remote MCP, the server runs in a container with no view of your file system, so `import_image` is unavailable.
+
 ### Client Config Snippets
 
 **Claude Code** (`.claude/settings.json`):
@@ -128,9 +146,9 @@ npx -y mcp-remote http://localhost:4401/sse --allow-http
 | `penpot_api_info`     | Both       | Query Penpot plugin API documentation                               |
 | `execute_code`        | Both       | Run JavaScript in Penpot plugin context — primary read/write tool   |
 | `export_shape`        | Both       | Export shape as PNG/SVG (remote: limited; may fail with HTTP error) |
-| `import_image`        | Local only | Import image from local file path into design                       |
+| `import_image`        | npx local only | Import image from local file path into design                   |
 
-> Remote MCP cannot import images from local paths. `export_shape` may fail with HTTP errors — always verify structurally via API rather than relying on export success.
+> Remote and self-hosted Docker MCP cannot import images from local paths — only the `npx` server sees your file system. `export_shape` may fail with HTTP errors — always verify structurally via API rather than relying on export success.
 
 ### Check connection first (always)
 
@@ -419,7 +437,7 @@ and a drop shadow. Describe the values you'll use before applying."
 | Large batches time out silently           | Max ~10 ops per call; verify after each                        |
 | Page switch is async                      | Never switch page and write in same call                       |
 | `export_shape` may fail with HTTP error   | Verify structurally via API; export is best-effort             |
-| Remote MCP can't read local file system   | Use local MCP for `import_image`                               |
+| Remote/Docker MCP can't read local files  | Use the `npx` local MCP for `import_image`                     |
 | Only one active MCP tab                   | Close other Penpot tabs before running agents                  |
 | `Error: Already connected to a transport` | Close other MCP clients; use `/sse` fallback if `/mcp` conflicts |
 | MCP key shown only once                   | Copy immediately; regenerate if lost                           |
