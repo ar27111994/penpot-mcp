@@ -78,9 +78,9 @@ penpot-mcp:
 
 - `enable-mcp` ships in the default `PENPOT_FLAGS`, and the frontend declares `depends_on: penpot-mcp`. Its nginx proxies `/mcp` to that container, so the frontend will not come up while the upstream is missing.
 - The container publishes **no port** — reach it through the frontend: `<PENPOT_PUBLIC_URI>/mcp/stream`, which is `http://localhost:9001/mcp/stream` with the stock compose file. `/mcp/sse` and `/mcp/ws` are served next to it.
-- Use the client config snippets below unchanged; a local instance connects without the `?userToken=` parameter the remote URL needs.
+- **A `?userToken=` key is still required.** The image starts the server as `node index.js --multi-user`, and multi-user forces remote mode, so authentication applies exactly as for hosted remote: generate the key under **Your account → Integrations → MCP Server** and use `http://localhost:9001/mcp/stream?userToken=YOUR_MCP_KEY`. Without it the setup looks healthy — the session initialises, the client reports connected and `high_level_overview` answers — but every tool that reaches the plugin fails with `No userToken found in session context. Multi-user mode requires authentication.`
 - **Upgrading an older self-hosted stack:** copy the `penpot-mcp` service into your compose file. Neither `npx @penpot/mcp` nor the old `localhost:4401` endpoint serves this setup.
-- Like Remote MCP, the server runs in a container with no view of your file system, so `import_image` is unavailable.
+- Like Remote MCP, the server has no view of your file system, so `import_image` is unavailable — it gates file access on local mode, which multi-user rules out.
 
 ### Client Config Snippets
 
@@ -135,6 +135,7 @@ npx -y mcp-remote http://localhost:4401/sse --allow-http
 - Keep plugin window open while agents run at all times
 - Firefox preferred if Chromium blocks `localhost` from `https://design.penpot.app`
 - Expired MCP key → regenerate in Penpot → Integrations; update all client configs
+- `No userToken found in session context` while the client shows connected → self-hosted Docker server, URL missing `?userToken=`
 
 ---
 
