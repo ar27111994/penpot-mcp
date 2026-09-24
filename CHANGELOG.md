@@ -2,6 +2,16 @@
 
 All notable changes to this community skill are documented here.
 
+## 1.6.0 - 2026-09-24
+
+- Updated for Penpot 2.16–2.18 (sources: `penpot/penpot` `CHANGES.md`, plugin types at tag `2.18.0`, the 2.18 MCP server's `high_level_overview` text):
+  - MCP tools: `export_shape` `mode: "shape" | "fill"`; tool registration is conditional (`import_image` only with file-system access, REPL/dev tools only in a dev environment, never in multi-user mode), so a remote team server exposes four tools.
+  - Troubleshooting for the 2.18 plugin heartbeat ("plugin tab appears to be suspended"): after a server upgrade the browser can keep serving stale plugin code; `No Penpot instance connected for user token`; the MCP key is no longer accepted as an API access token.
+  - Plugin API: variants (`penpotUtils.createVariantContainer`, the ordered low-level `createVariantFromComponents` path, `isVariant()`, `switchVariant()`, `resetOverrides()`), token helpers (`penpotUtils.tokenOverview/findTokenByName/findTokensByName/getTokenSet`, `token.applyToShapes()`), `await waitForLayoutUpdate()` instead of sleeps, `Stroke.strokeImage`.
+  - `openPage()` is typed as `Promise<void>` in 2.18; the two-call page-switch pattern stays the default until a single awaited call is confirmed live.
+- Fixed client config snippets: Claude Code project servers live in `.mcp.json` with `"type": "http"` (or `claude mcp add --transport http`); VS Code uses `.vscode/mcp.json` with a top-level `servers` object.
+- Fixed reference snippets: idempotent `ensureComponent` returns the existing component instead of `null`; parented clones are positioned with `penpotUtils.setParentXY`; prototyping snippets re-resolve boards in each `execute_code` call (no cross-call variables) and guard missing boards.
+
 ## 1.5.3 - 2026-05-29
 
 - Added snippet validation for direct `parentX` / `parentY` assignments and now require `penpotUtils.setParentXY(shape, x, y)`.

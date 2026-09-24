@@ -88,6 +88,14 @@ return { wired: `${home.name} → ${login.name}`, status: "ok" };
 ### Step 3: Wire back navigation
 
 ```javascript
+// Runs in its own execute_code call — re-resolve the boards from Step 2,
+// don't rely on variables from a previous call's scope.
+const boards = penpotUtils.findShapes((s) => s.type === "board", penpot.root);
+const home = boards.find((b) => b.name === "/flows/onboarding-start");
+const login = boards.find((b) => b.name === "/screens/login");
+if (!home || !login)
+  return { error: "Board not found", boards: boards.map((b) => b.name) };
+
 const back = penpotUtils.findShapes((s) => s.name === "btn-back", login)[0];
 if (!back) return "btn-back not found on login board";
 
@@ -174,10 +182,18 @@ trigger.addInteraction("click", {
 ### Close button wiring (inside overlay board)
 
 ```javascript
+// Runs in its own execute_code call — re-resolve the overlay board, don't
+// rely on `modal` from a previous call's scope.
+const modal = penpotUtils
+  .findShapes((s) => s.type === "board", penpot.root)
+  .find((b) => b.name === "overlay/confirm-delete");
+if (!modal) return { error: "overlay/confirm-delete board not found" };
+
 const closeBtn = penpotUtils.findShapes(
   (s) => s.name === "btn-close",
   modal,
 )[0];
+if (!closeBtn) return { error: "btn-close not found on overlay board" };
 closeBtn.addInteraction("click", { type: "close-overlay" });
 ```
 
@@ -240,11 +256,17 @@ Flag any dead ends (boards reachable in the flow with no onward interaction)."
 
 ```javascript
 // Conditional path: login success → dashboard, login fail → error screen
+const boards = penpotUtils.findShapes((s) => s.type === "board", penpot.root);
+const loginBoard = boards.find((b) => b.name === "/screens/login");
+if (!loginBoard) return { error: "Board not found", boards: boards.map((b) => b.name) };
+
 const loginBtn = penpotUtils.findShapes(
   (s) => s.name === "btn-login",
   loginBoard,
 )[0];
 const dashboard = boards.find((b) => b.name === "/screens/dashboard");
+if (!loginBtn || !dashboard)
+  return { error: "btn-login or dashboard board not found" };
 // Note: Penpot MCP can't add conditional logic — wire the happy path first
 // Add error state as a separate screen accessible from a secondary trigger
 
@@ -297,16 +319,32 @@ const allBoards = penpotUtils.findShapes(
   (s) => s.type === "board",
   penpot.root,
 );
+// Track progress with a cursor in `storage`, scoped to the current page —
+// without the page check, switching pages between calls applies the wrong
+// page's cursor to the new board list and can skip every board there.
+if (storage.resetInteractionsPageId !== penpot.currentPage.id) {
+  storage.resetInteractionsCursor = 0;
+  storage.resetInteractionsPageId = penpot.currentPage.id;
+}
+const cursor = storage.resetInteractionsCursor || 0;
+const batch = allBoards.slice(cursor, cursor + 5);
 let removed = 0;
-// Batch: 5 boards at a time
-const processed = allBoards.slice(0, 5);
-processed.forEach((board) => {
-  (board.interactions || []).forEach((i) => {
+batch.forEach((board) => {
+  // Iterate a COPY — `.remove()` mutates `board.interactions` in place, so
+  // iterating the live array directly skips every second entry.
+  [...(board.interactions || [])].forEach((i) => {
     i.remove();
     removed++;
   });
 });
-return { removedCount: removed, remaining: allBoards.length - processed.length };
+storage.resetInteractionsCursor = cursor + batch.length;
+const remaining = allBoards.length - storage.resetInteractionsCursor;
+if (remaining <= 0) {
+  // done — reset for next run
+  delete storage.resetInteractionsCursor;
+  delete storage.resetInteractionsPageId;
+}
+return { removedCount: removed, remaining: Math.max(remaining, 0) };
 ```
 
 ---
@@ -324,7 +362,11 @@ screens.forEach((name) => {
   board.name = `/wireframes/${name}`;
   board.resize(375, 812);
   board.fills = [{ fillColor: "#F5F5F5", fillOpacity: 1 }];
-  penpotUtils.setParentXY(board, x, 0);
+  // `board` here is root-level (just created, not appended into anything) —
+  // direct assignment works; setParentXY is only for parented shapes (see
+  // SKILL.md §"Penpot plugin API" gotchas and api-patterns.md §3).
+  board.x = x;
+  board.y = 0;
 
   // Add placeholder header bar
   const header = penpot.createRectangle();
