@@ -131,7 +131,9 @@ npx -y mcp-remote http://localhost:4401/sse --allow-http
   the server treats the tab as frozen when the plugin sends nothing for 30 s. It is **not always a
   background tab**: after a server upgrade the browser can keep serving the old plugin code, which never
   sends heartbeats. Clear the Penpot site data, hard-reload, then reopen the plugin and press Connect.
-  Server log check: `New WebSocket connection established` followed by silence means stale plugin code.
+  Server log check: `New WebSocket connection established` followed by silence can indicate stale
+  plugin code, especially after an upgrade — but a suspended background tab produces the same
+  pattern, so treat it as a lead, not proof.
 - Since 2.18.0 the MCP key is no longer accepted as a regular Penpot API access token (security
   fix #10960/#10962). Integrations that call the REST API need their own access token.
 - `No Penpot instance connected for user token` → the plugin is not connected (panel closed, or it

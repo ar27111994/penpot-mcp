@@ -437,7 +437,7 @@ const container = penpotUtils.createVariantContainer([
 
 libraryComponent.isVariant(); // type guard -> LibraryVariantComponent (2.16.0, #9302)
 instance.switchVariant(pos, value); // swap an instance to the nearest variant with that value
-instance.component().resetOverrides(); // reset a copy's overrides to the main (2.17.0, #10561)
+instance.resetOverrides(); // reset a copy's overrides to the main (2.17.0, #10561)
 ```
 
 ---
@@ -497,9 +497,6 @@ theme.toggleActive(); // activate theme
 theme.duplicate();
 theme.remove();
 ```
-
-> The 2.18 server overview documents `addTheme(group: string, name: string)` with positional
-> arguments, unlike the object form above. Probe on your instance before relying on either.
 
 ### Finding and applying tokens (Penpot 2.18 helpers)
 
@@ -772,11 +769,15 @@ return { queued: storage.shapesToProcess.length };
 ```
 
 ```javascript
-// ── Call B+: drain one item per call — apply the same `|| fallback`
-// rule to the queue itself, since storage resets on server restart ──
-const queue = storage.shapesToProcess || [];
+// ── Call B+: drain one item per call — distinguish "queue missing" (storage
+// reset by a server restart) from "queue drained" (every item processed);
+// treating a missing queue as empty would silently report done: true ──
+if (!storage.shapesToProcess) {
+  return { error: "queue state lost (server restart?) — rebuild the queue" };
+}
+const queue = storage.shapesToProcess;
 const processed = storage.processed || [];
-const id = queue.shift();
+const id = queue[0];
 if (id === undefined) {
   return { done: true, remaining: 0, processedCount: processed.length };
 }
@@ -785,6 +786,10 @@ if (shape) {
   // ...do something with shape...
   processed.push(id);
 }
+// Shift only after processing completes — the handler restores Penpot flags
+// on a thrown error but not `storage`, so shifting up front would drop the
+// item that failed instead of leaving it queued for retry.
+queue.shift();
 storage.shapesToProcess = queue;
 storage.processed = processed;
 return {
@@ -794,7 +799,7 @@ return {
 };
 ```
 
-> **Note:** `storage` is session-scoped — it resets when the MCP server is restarted. Always use `|| fallback` when reading from storage.
+> **Note:** `storage` is session-scoped — it resets when the MCP server is restarted. Check explicitly for a missing queue instead of defaulting it to empty, and use `|| fallback` for values where empty is a safe default (like `processed`).
 
 ---
 
@@ -1150,13 +1155,19 @@ const DESTINATION_ACTION_TYPES = new Set([
   "open-overlay",
   "toggle-overlay",
 ]);
-const brokenInteractions = allBoards
-  .flatMap((b) =>
-    (b.interactions || []).map((i) => {
+// Interactions can be attached to any shape, not only boards (e.g. a
+// "btn-back" nested inside one) — scan the whole tree so those aren't missed.
+const shapesWithInteractions = penpotUtils.findShapes(
+  (s) => s.interactions?.length > 0,
+  penpot.root,
+);
+const brokenInteractions = shapesWithInteractions
+  .flatMap((s) =>
+    (s.interactions || []).map((i) => {
       const needsDestination = DESTINATION_ACTION_TYPES.has(i.action?.type);
       const dest = i.action?.destination;
       return {
-      source: b.name,
+        source: s.name,
         dest: dest?.name ?? null,
         // Broken when a destination is required but missing (points at a
         // deleted board) or names a board this scan doesn't know about —

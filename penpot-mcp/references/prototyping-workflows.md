@@ -319,8 +319,13 @@ const allBoards = penpotUtils.findShapes(
   (s) => s.type === "board",
   penpot.root,
 );
-// Track progress with a cursor in `storage` — without it, re-running this call
-// always slices the same first 5 boards and never advances.
+// Track progress with a cursor in `storage`, scoped to the current page —
+// without the page check, switching pages between calls applies the wrong
+// page's cursor to the new board list and can skip every board there.
+if (storage.resetInteractionsPageId !== penpot.currentPage.id) {
+  storage.resetInteractionsCursor = 0;
+  storage.resetInteractionsPageId = penpot.currentPage.id;
+}
 const cursor = storage.resetInteractionsCursor || 0;
 const batch = allBoards.slice(cursor, cursor + 5);
 let removed = 0;
@@ -334,7 +339,11 @@ batch.forEach((board) => {
 });
 storage.resetInteractionsCursor = cursor + batch.length;
 const remaining = allBoards.length - storage.resetInteractionsCursor;
-if (remaining <= 0) delete storage.resetInteractionsCursor; // done — reset for next run
+if (remaining <= 0) {
+  // done — reset for next run
+  delete storage.resetInteractionsCursor;
+  delete storage.resetInteractionsPageId;
+}
 return { removedCount: removed, remaining: Math.max(remaining, 0) };
 ```
 
