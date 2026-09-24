@@ -1,6 +1,6 @@
 ---
 name: penpot-mcp
-version: "1.5.3"
+version: "1.6.0"
 category: design
 tags: [penpot, mcp, design-system, prototyping, design-to-code, tokens, interactions]
 compatibility: claude-code, cursor, vscode, copilot, codex, windsurf, cline, amp, claude-desktop
@@ -66,14 +66,23 @@ npx @penpot/mcp@beta     # for beta/test environments
 
 ### Client Config Snippets
 
-**Claude Code** (`.claude/settings.json`):
+**Claude Code** — project-scoped MCP servers live in `.mcp.json` at the repo
+root, NOT in `.claude/settings.json` (that file only has `enabledMcpjsonServers`
+/ `enableAllProjectMcpServers`, which toggle trust for servers already defined
+in `.mcp.json` — it never itself holds an `mcpServers` block):
 
 ```json
 {
   "mcpServers": {
-    "penpot": { "transport": "http", "url": "REMOTE_OR_LOCAL_URL" }
+    "penpot": { "type": "http", "url": "REMOTE_OR_LOCAL_URL" }
   }
 }
+```
+
+Or register it without hand-editing a file:
+
+```bash
+claude mcp add --transport http penpot REMOTE_OR_LOCAL_URL
 ```
 
 **Cursor**:
@@ -82,12 +91,13 @@ npx @penpot/mcp@beta     # for beta/test environments
 { "mcpServers": { "penpot": { "url": "REMOTE_OR_LOCAL_URL", "type": "http" } } }
 ```
 
-**VS Code / Copilot** (`settings.json`):
+**VS Code / Copilot** (`.vscode/mcp.json` — VS Code expects a top-level
+`servers` object here, not an `mcp.servers` _setting_ in `settings.json`):
 
 ```json
 {
-  "mcp.servers": {
-    "penpot": { "transport": "http", "url": "REMOTE_OR_LOCAL_URL" }
+  "servers": {
+    "penpot": { "type": "http", "url": "REMOTE_OR_LOCAL_URL" }
   }
 }
 ```
@@ -117,6 +127,15 @@ npx -y mcp-remote http://localhost:4401/sse --allow-http
 - Keep plugin window open while agents run at all times
 - Firefox preferred if Chromium blocks `localhost` from `https://design.penpot.app`
 - Expired MCP key → regenerate in Penpot → Integrations; update all client configs
+- `The Penpot plugin tab appears to be suspended by the browser (no heartbeat for Ns)` (server ≥ 2.18) →
+  the server treats the tab as frozen when the plugin sends nothing for 30 s. It is **not always a
+  background tab**: after a server upgrade the browser can keep serving the old plugin code, which never
+  sends heartbeats. Clear the Penpot site data, hard-reload, then reopen the plugin and press Connect.
+  Server log check: `New WebSocket connection established` followed by silence means stale plugin code.
+- Since 2.18.0 the MCP key is no longer accepted as a regular Penpot API access token (security
+  fix #10960/#10962). Integrations that call the REST API need their own access token.
+- `No Penpot instance connected for user token` → the plugin is not connected (panel closed, or it
+  connected and closed again) or the plugin's MCP key differs from the `userToken` in the client URL
 
 ---
 
@@ -131,6 +150,16 @@ npx -y mcp-remote http://localhost:4401/sse --allow-http
 | `import_image`        | Local only | Import image from local file path into design                       |
 
 > Remote MCP cannot import images from local paths. `export_shape` may fail with HTTP errors — always verify structurally via API rather than relying on export success.
+
+`export_shape` takes `mode: "shape"` (default, the shape with descendants) or `mode: "fill"`, which
+exports the raw image used as the shape's fill (PNG only).
+
+**Tool registration is conditional (server 2.18).** The four "Both" tools are always registered.
+`import_image` exists only when the server has file-system access, so only in local mode.
+`cljs_repl`, `cljs_compiler_output`, `clj_check_parentheses`, `import_penpot_file` and
+`read_taiga_issue` are developer tools, registered only in a dev environment and never in
+multi-user mode. A remote team server therefore exposes exactly four tools. Do not plan work
+around the others.
 
 ### Check connection first (always)
 
@@ -173,7 +202,7 @@ Call N:   penpot.openPage(page)    ← switch page (currentPage still reports OL
 Call N+1: any operation            ← now on new page; currentPage updated
 ```
 
-**⚠️ Penpot ≤ 2.16.x only — fixed upstream in 2.17.0 ([#10078](https://github.com/penpot/penpot/issues/10078)):** `penpot.currentPage` does NOT update until the next tool call after `openPage()`. Writing shapes in the same call as `openPage()` silently applies them to the **previously** active page. This is a plugin-bridge bug, not a permanent API contract. On Penpot ≥ 2.17.0, `currentPage` updates immediately after `openPage()` and the two-call pattern is unnecessary — keep it anyway as a harmless defensive habit.
+**⚠️ Penpot ≤ 2.16.x only — fixed upstream in 2.17.0 ([#10078](https://github.com/penpot/penpot/issues/10078)):** `penpot.currentPage` does NOT update until the next tool call after `openPage()`. Writing shapes in the same call as `openPage()` silently applies them to the **previously** active page. This is a plugin-bridge bug, not a permanent API contract. On Penpot ≥ 2.17.0, `currentPage` updates immediately after `openPage()` and the two-call pattern is unnecessary — keep it anyway as a harmless defensive habit. The 2.18.0 types declare `openPage(page: Page | string): Promise<void>`, and their JSDoc example does `await penpot.openPage(page)` and then writes in the same call. Sources disagree, though: a live probe in `penpot/penpot-ai-kit` (dated 2026-08-10, after the fix) still saw the old two-call behaviour. Until it is probed on your instance, `await` the call **and** keep the two-call pattern.
 
 **`remove()` is unreliable across calls** — Boards deleted via `shape.remove()` may reappear in subsequent structural queries (`getPages()` → `shapeStructure()`). The remove appears to succeed in the current call, but stale boards from previous sessions can reappear when the page structure is re-read. (No upstream fix published through 2.18.0 — treat cleanup as best-effort and always verify structurally in a later call.)
 
@@ -413,7 +442,7 @@ and a drop shadow. Describe the values you'll use before applying."
 **MCP/infrastructure:**
 
 | Gotcha                                    | Mitigation                                                     |
-| ----------------------------------------- | -------------------------------------------------------------- |
+| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | MCP acts on focused page only             | Confirm page focus before each write batch                     |
 | Write ops immediate — no undo via MCP     | Plan + describe before applying                                |
 | Large batches time out silently           | Max ~10 ops per call; verify after each                        |
@@ -423,13 +452,15 @@ and a drop shadow. Describe the values you'll use before applying."
 | Only one active MCP tab                   | Close other Penpot tabs before running agents                  |
 | `Error: Already connected to a transport` | Close other MCP clients; use `/sse` fallback if `/mcp` conflicts |
 | MCP key shown only once                   | Copy immediately; regenerate if lost                           |
+| No heartbeat for 30 s = "tab suspended" (≥ 2.18) | See Troubleshooting: stale plugin code after an upgrade looks the same as a frozen tab                                                                                                                              |
+| Export after a 2.18 upgrade can differ from 2.17 | Observed in `export_shape` output after upgrading a self-hosted instance to 2.18.0: inner shadows painted over a board's children (an active nav item rendered empty), `auto-width` text clipped to a stale width. Check the canvas before blaming the design |
 | Expired key blocks all connections        | Regenerate in Integrations; update all configs                 |
 | Chromium ≥142 blocks localhost            | Use Firefox, or allow local network explicitly                 |
 
 **Penpot plugin API (full detail → `references/penpot-api-patterns.md`):**
 
 | Gotcha                                              | Mitigation                                                                |
-| --------------------------------------------------- | ------------------------------------------------------------------------- |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `shape.width` / `shape.height` READ-ONLY            | Use `shape.resize(w, h)`                                                  |
 | `shape.x` / `shape.y` READ-ONLY for parented shapes | Use `penpotUtils.setParentXY(shape, x, y)`                                |
 | `shape.x` / `shape.y` for root-level boards         | ✅ Direct assignment works                                                |
@@ -446,3 +477,6 @@ and a drop shadow. Describe the values you'll use before applying."
 | `storage` resets on server restart                  | Always use a fallback value when reading                                  |
 | `Page.findShapes()` takes criteria object           | `page.findShapes({ type: 'board' })` not a predicate                      |
 | `createComponent` wraps an array                    | `createComponent([shape])` not `createComponent(shape)`                   |
+| `penpot.fonts.findByName` matches by substring (penpot-ai-kit, unverified here)                 | `"Roboto"` can return `"Roboto Mono"`: filter `penpot.fonts.all` by exact `name`                                                                     |
+| `layoutChild.horizontalSizing = "fill"` may set `flipX = true` (penpot-ai-kit, unverified here) | Read `flipX` back after sizing changes and reset it                                                                                                  |
+| Variant groups need a strict multi-step order                                                   | Use `penpotUtils.createVariantContainer([{ shape, properties: { Size: 'S' } }, …])`; on an instance switch with `instance.switchVariant(pos, value)` |

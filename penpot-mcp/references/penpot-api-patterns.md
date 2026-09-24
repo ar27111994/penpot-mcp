@@ -206,6 +206,13 @@ container.insertChild(1, content); // middle
 container.insertChild(2, header); // top ← counter-intuitive
 ```
 
+### Waiting for layout instead of sleeping (Penpot ≥ 2.17)
+
+`execute_code` supports top-level `await`. After flex/grid or component changes, prefer
+`await board.waitForLayoutUpdate()` over a fixed `setTimeout` sleep before reading geometry.
+It exists since 2.17.0 (#10136); since 2.18.0 it also waits for component sync (#10927).
+`Stroke.strokeImage` (image strokes) exists since 2.18.0.
+
 ### Text resize + growType (always pair)
 
 ```javascript
@@ -314,6 +321,7 @@ const page = penpot.currentPage;
 const entryBoard = penpotUtils.findShape(
   (s) => s.name === "/flows/onboarding-start",
 );
+if (!entryBoard) return { error: "Entry board not found" };
 const flow = page.createFlow("Onboarding", entryBoard);
 
 // Remove a flow
@@ -392,18 +400,44 @@ typo.setFont(font, variant); // set font + variant from Fonts API
 
 ```javascript
 function ensureComponent(name, shapes) {
-  if (penpot.library.local.components.some((c) => c.name === name)) return null;
+  const existing = penpot.library.local.components.find((c) => c.name === name);
+  if (existing) return existing; // idempotent retry: return the found component, not null
   const component = penpot.library.local.createComponent(shapes); // shapes: Shape[]
   component.name = name; // supports path: 'category/component/variant'
   return component;
 }
 
 // Typical pattern: clone shape, position it off-canvas, then create component
-const clone = sourceShape.clone();
-clone.x = 3400;
-clone.y = 0;
+const clone = sourceShape.clone(); // clones into the SAME parent as sourceShape
+// clone.x/.y is READ-ONLY when the clone is parented (see gotcha table above) —
+// direct assignment silently no-ops there, so always go through setParentXY.
+penpotUtils.setParentXY(clone, 3400, 0);
 const component = penpot.library.local.createComponent([clone]);
 component.name = "category/component/variant";
+```
+
+### Variants and component overrides (Penpot 2.16–2.18)
+
+Source: plugin types at tag `2.18.0` (`plugins/libs/plugin-types/index.d.ts`) and the server's
+`high_level_overview` text. Availability depends on the server version: check with `typeof` before relying on a method.
+
+```javascript
+// Preferred: one call builds the whole variant group (the order of low-level steps matters)
+const container = penpotUtils.createVariantContainer([
+  { shape: small, properties: { Size: "Small", State: "Default" } },
+  { shape: large, properties: { Size: "Large", State: "Default" } },
+]);
+
+// Low-level path, strict order (2.17.0 fixed the undocumented multi-step workflow, #10149):
+// 1) penpot.createVariantFromComponents(mainInstances: Board[]) -> VariantContainer ("Property 1")
+// 2) container.variants.renameProperty(0, "Size"); addProperty(); renameProperty(pos, name)
+// 3) for every component x property: comp.setVariantProperty(pos, value)
+// Unverified third-party report (penpot-ai-kit, 2.16.0-RC10): mutating an existing variant
+// component this way corrupted the file. Duplicate the file first when using the low-level path.
+
+libraryComponent.isVariant(); // type guard -> LibraryVariantComponent (2.16.0, #9302)
+instance.switchVariant(pos, value); // swap an instance to the nearest variant with that value
+instance.component().resetOverrides(); // reset a copy's overrides to the main (2.17.0, #10561)
 ```
 
 ---
@@ -464,6 +498,23 @@ theme.duplicate();
 theme.remove();
 ```
 
+> The 2.18 server overview documents `addTheme(group: string, name: string)` with positional
+> arguments, unlike the object form above. Probe on your instance before relying on either.
+
+### Finding and applying tokens (Penpot 2.18 helpers)
+
+```javascript
+penpotUtils.tokenOverview(); // { setName: { tokenType: [tokenName, ...] } }
+penpotUtils.findTokenByName("color.text.primary"); // first applicable token (prefer over sets.find)
+penpotUtils.findTokensByName("color.text.primary"); // every match across sets
+penpotUtils.getTokenSet(token); // the TokenSet that holds the token
+
+shape.applyToken(token, ["fill"]); // one shape
+token.applyToShapes([a, b, c], ["fill"]); // one token, many shapes
+// Application is ASYNCHRONOUS: read shape.tokens / resolved values in a LATER call.
+// Removing a binding = assigning the property directly (e.g. shape.fills = [...]).
+```
+
 ### Full token setup example (production pattern)
 
 ```javascript
@@ -493,6 +544,7 @@ function ensureTheme(group, name, sets) {
 
 const base = ensureSet("brand/base");
 addToken(base, "color", "color.brand.primary", "#RRGGBB"); // replace with your brand color
+addToken(base, "color", "color.neutral.900", "#171717"); // must exist before it's referenced below
 addToken(base, "spacing", "spacing.md", "16");
 addToken(base, "borderRadius", "radius.md", "8");
 addToken(base, "borderRadius", "radius.lg", "16");
@@ -500,7 +552,7 @@ addToken(base, "opacity", "opacity.overlay", "0.8");
 
 const light = ensureSet("theme/light");
 addToken(light, "color", "color.bg.default", "#F5F5F5");
-addToken(light, "color", "color.text.primary", "{color.neutral.900}"); // reference
+addToken(light, "color", "color.text.primary", "{color.neutral.900}"); // reference — resolves against base set above
 
 const dark = ensureSet("theme/dark");
 addToken(dark, "color", "color.bg.default", "#121212");
@@ -520,10 +572,13 @@ ensureTheme("Theme", "Dark", [base, dark]);
 ### Font weight — must match installed variants
 
 ```javascript
-// Always discover installed typographies before using a font family
+// `penpot.library.local.typographies` lists typographies already USED in this
+// file — it is not a system font list. There is no documented API to query
+// installed system fonts from execute_code; check the Fonts picker in the UI
+// for that. This only tells you what variants THIS file already relies on.
 const typos = penpot.library.local.typographies;
 const interWeights = typos
-  .filter((t) => t.fontFamilies === "Inter")
+  .filter((t) => t.fontFamilies === "Inter 28pt") // match the real fontFamilies value below, not the bare family name
   .map((t) => t.fontWeight);
 // Only use weights confirmed in interWeights array
 
@@ -703,18 +758,39 @@ return { stored: true, colorCount: Object.keys(DS.colors).length };
 const fallback = { colors: {}, typography: [] };
 const DS = storage.designSystem || fallback; // fallback if session reset
 const C = DS.colors;
+```
 
-// Pattern for processing queues
+Pattern for processing queues — seed the queue once, then drain it one item
+per call so a single `execute_code` call never times out on a large file:
+
+```javascript
+// ── Call A (once): seed the queue ──
+const allShapes = penpotUtils.findShapes(() => true, penpot.root);
 storage.shapesToProcess = allShapes.map((s) => s.id);
 storage.processed = [];
+return { queued: storage.shapesToProcess.length };
+```
 
-// Later call:
-const id = storage.shapesToProcess.shift();
+```javascript
+// ── Call B+: drain one item per call — apply the same `|| fallback`
+// rule to the queue itself, since storage resets on server restart ──
+const queue = storage.shapesToProcess || [];
+const processed = storage.processed || [];
+const id = queue.shift();
+if (id === undefined) {
+  return { done: true, remaining: 0, processedCount: processed.length };
+}
 const shape = penpotUtils.findShapeById(id);
-storage.processed.push(id);
+if (shape) {
+  // ...do something with shape...
+  processed.push(id);
+}
+storage.shapesToProcess = queue;
+storage.processed = processed;
 return {
-  remaining: storage.shapesToProcess.length,
-  done: storage.processed.length,
+  done: false,
+  remaining: queue.length,
+  processedCount: processed.length,
 };
 ```
 
@@ -978,6 +1054,7 @@ type Action =
 ```javascript
 const home = penpotUtils.findShape((s) => s.name === "Home");
 const detail = penpotUtils.findShape((s) => s.name === "Detail");
+if (!home || !detail) return { error: "Home or Detail board not found" };
 
 // Navigate with animation
 home.addInteraction("click", {
@@ -995,6 +1072,7 @@ home.addInteraction(
 
 // Open overlay
 const modal = penpotUtils.findShape((s) => s.name === "overlay/confirm-delete");
+if (!modal) return { error: "overlay/confirm-delete board not found" };
 home.addInteraction("click", {
   type: "open-overlay",
   destination: modal,
@@ -1013,6 +1091,7 @@ const page = penpot.currentPage;
 const entryBoard = penpotUtils.findShape(
   (s) => s.name === "/flows/onboarding-start",
 );
+if (!entryBoard) return { error: "Entry board not found" };
 page.createFlow("Onboarding", entryBoard);
 // page.flows returns all Flow objects on the page
 ```
@@ -1034,10 +1113,18 @@ const allBoards = penpotUtils.findShapes(
   penpot.root,
 );
 const allBoardNames = new Set(allBoards.map((b) => b.name));
+// execute_code has no documented API to enumerate OTHER pages, so this audit
+// is scoped to the current page. If some interactions legitimately target
+// boards on other pages (get their names from `high_level_overview`), list
+// them here so they aren't flagged as broken.
+const otherPageBoardNames = [];
+const knownBoardNames = new Set([...allBoardNames, ...otherPageBoardNames]);
 
 // Accessibility checks
 const tinyText = penpotUtils.findShapes(
-  (s) => s.type === "text" && Number(s.fontSize) < 12,
+  // fontSize is null for a text run with MIXED sizes, and Number(null) is 0 —
+  // guard the null explicitly so mixed-size text isn't reported as tiny.
+  (s) => s.type === "text" && s.fontSize != null && Number(s.fontSize) < 12,
   penpot.root,
 );
 const hardCodedFills = penpotUtils.findShapes(
@@ -1055,14 +1142,28 @@ const autoNamed = penpotUtils.findShapes(
 const unwiredBoards = allBoards
   .filter((b) => !b.interactions?.length)
   .map((b) => b.name);
+
+// Only these action types resolve to a destination board; "close-overlay" and
+// similar have none by design and must never be flagged as broken.
+const DESTINATION_ACTION_TYPES = new Set([
+  "navigate-to",
+  "open-overlay",
+  "toggle-overlay",
+]);
 const brokenInteractions = allBoards
   .flatMap((b) =>
-    (b.interactions || []).map((i) => ({
+    (b.interactions || []).map((i) => {
+      const needsDestination = DESTINATION_ACTION_TYPES.has(i.action?.type);
+      const dest = i.action?.destination;
+      return {
       source: b.name,
-      dest: i.action.destination?.name,
-      broken:
-        i.action.destination && !allBoardNames.has(i.action.destination.name),
-    })),
+        dest: dest?.name ?? null,
+        // Broken when a destination is required but missing (points at a
+        // deleted board) or names a board this scan doesn't know about —
+        // NOT when destination is simply absent by design (close-overlay).
+        broken: needsDestination && (!dest || !knownBoardNames.has(dest.name)),
+      };
+    }),
   )
   .filter((i) => i.broken);
 
