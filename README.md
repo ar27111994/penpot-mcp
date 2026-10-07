@@ -66,7 +66,7 @@ Key differences:
 
 - ✅ Covers **Remote MCP** and all major MCP client configs (Cursor, Claude Code, VS Code, Codex, Claude Desktop)
 - ✅ `npx @penpot/mcp@stable` — not the outdated `git clone` approach
-- ✅ Correct VS Code config key (`mcp.servers`, not `mcpServers`)
+- ✅ Correct VS Code config: `.vscode/mcp.json` with a top-level `servers` object
 - ✅ Full **interactions & animations** API (`addInteraction`, all triggers/actions/animations)
 - ✅ **Font/typography constraints** from real-world production use
 - ✅ **Write safety**: batch limits, page-switch two-call pattern, export reliability gotcha
